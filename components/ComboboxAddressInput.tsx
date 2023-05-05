@@ -176,7 +176,7 @@ function ComboboxAddressInput({possibleDestinations, tokenToReceive, onChangeDes
 						afterLeave={(): void => set_query('')}>
 						<Combobox.Options className={'box-0 absolute left-0 z-50 mt-1 flex max-h-60 w-full min-w-fit flex-col overflow-y-auto scrollbar-none'}>
 							{filteredDestinations.length === 0 && query !== '' && !tokenData ? (
-								<div className={'relative cursor-default select-none py-2 px-4 text-neutral-500'}>
+								<div className={'relative cursor-default select-none px-4 py-2 text-neutral-500'}>
 									{'No token found.'}
 								</div>
 							) : filteredDestinations.length === 0 && query !== '' && tokenData ? (

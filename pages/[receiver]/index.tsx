@@ -6,7 +6,7 @@ import IconSave from 'components/icons/IconSave';
 import IconSpinner from 'components/icons/IconSpinner';
 import Logo from 'components/icons/logo';
 import {isAddress} from 'ethers/lib/utils';
-import {load} from 'pages/api/db';
+import load from 'pages/api/read';
 import lensProtocol from 'utils/lens.tools';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
@@ -69,7 +69,7 @@ function	IamDescription(props: TReceiverProps): ReactElement {
 
 	return (
 		<div className={'relative mt-4'}>
-			<div className={'absolute top-2 -left-7 flex h-full flex-col space-y-4 border-r-2 border-neutral-100 pr-2 pt-1'}>
+			<div className={'absolute -left-7 top-2 flex h-full flex-col space-y-4 border-r-2 border-neutral-100 pr-2 pt-1'}>
 				<label htmlFor={'description'}>
 					<IconEdit
 						className={'h-3 w-3 cursor-pointer text-neutral-400/80 transition-colors hover:text-neutral-900'} />
@@ -295,8 +295,8 @@ function	IamReceiver(props: TReceiverProps): ReactElement {
 
 	return (
 		<div className={'mx-auto mb-20 grid w-full max-w-5xl'}>
-			<div className={'mt-6 mb-10 flex flex-col justify-center md:mt-20'}>
-				<div className={'mt-4 -ml-2 flex flex-row items-center md:mt-6'}>
+			<div className={'mb-10 mt-6 flex flex-col justify-center md:mt-20'}>
+				<div className={'-ml-2 mt-4 flex flex-row items-center md:mt-6'}>
 					<div className={'mr-4 h-14 w-14 rounded-full bg-neutral-200'}>
 						<Image
 							src={'https://images.unsplash.com/photo-1550165946-6c770414edb8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&q=80'}
@@ -410,8 +410,8 @@ function	Receiver(props: TReceiverProps): ReactElement {
 
 	return (
 		<div className={'mx-auto grid w-full max-w-5xl'}>
-			<div className={'mt-6 mb-10 flex flex-col justify-center md:mt-20'}>
-				<h1 className={'mt-4 -ml-1 text-3xl tracking-tight text-neutral-900 md:mt-6 md:text-5xl'}>
+			<div className={'mb-10 mt-6 flex flex-col justify-center md:mt-20'}>
+				<h1 className={'-ml-1 mt-4 text-3xl tracking-tight text-neutral-900 md:mt-6 md:text-5xl'}>
 					{`Gib to ${props.name}`}
 				</h1>
 				<p className={'mt-4 w-full text-base italic leading-normal text-neutral-500 md:w-3/4 md:text-base md:leading-8'}>

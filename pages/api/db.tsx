@@ -91,7 +91,7 @@ async function load(action: string, address: TAddress): Promise<any> {
 	if (action === 'LOAD_CREATOR') {
 		try {
 			const {rows} = await client.sql`SELECT * FROM Creators WHERE Address = ${address}`;
-			return rows[0];
+			return rows?.[0] || null;
 		} catch (error) {
 			console.log(error);
 			return null;

@@ -113,7 +113,7 @@ function	AddressInput({value, onChangeValue, onConfirm, className, shouldBeDisab
 						set_isValidValue('undetermined');
 						onChangeValue(e.target.value as never);
 					}}
-					className={'w-full overflow-x-scroll border-none bg-transparent py-4 px-0 font-mono text-sm font-bold outline-none scrollbar-none'} />
+					className={'w-full overflow-x-scroll border-none bg-transparent px-0 py-4 font-mono text-sm font-bold outline-none scrollbar-none'} />
 				<div className={'pointer-events-none relative h-4 w-4'}>
 					<IconCheck
 						className={`absolute h-4 w-4 text-[#16a34a] transition-opacity ${isValidValue === true || isValidish === true ? 'opacity-100' : 'opacity-0'}`} />
