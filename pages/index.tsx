@@ -1,16 +1,9 @@
 import React from 'react';
 import CardWithIcon from 'components/CardWithIcon';
-import axios from 'axios';
 
 import type {ReactElement} from 'react';
 
 function	Home(): ReactElement {
-	function	onCreate(): void {
-		axios.post('/api/create', {
-			owner: 'test',
-			description: 'testest'
-		});
-	}
 	return (
 		<div className={'mx-auto grid w-full max-w-5xl'}>
 			<div className={'mt-6 mb-10 flex flex-col justify-center md:mt-20'}>
@@ -35,7 +28,7 @@ function	Home(): ReactElement {
 							</svg>
 						)}
 						label={'$1.00'}
-						onClick={(): void => onCreate()} />
+						onClick={(): void => undefined} />
 					<CardWithIcon
 						isSelected={false}
 						icon={(
@@ -63,7 +56,6 @@ function	Home(): ReactElement {
 
 				</div>
 			</div>
-
 		</div>
 	);
 }

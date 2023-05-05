@@ -101,5 +101,3 @@ async function load(action: string, address: TAddress): Promise<any> {
 
 export {load};
 export default update;
-
-// Hahow! Help me bring joy to Chuchu! With your support, I can create meaningful and impactful work that inspires change. Join me on this journey and be a part of something bigger. #SponsorMyDreams #UnrestrictedCreativity!!!
