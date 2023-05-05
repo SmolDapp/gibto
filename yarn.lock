@@ -2263,10 +2263,10 @@
   dependencies:
     lodash "^4"
 
-"@yearn-finance/web-lib@^0.18.31":
-  version "0.18.31"
-  resolved "https://registry.yarnpkg.com/@yearn-finance/web-lib/-/web-lib-0.18.31.tgz#5b7d747caa7f3962a0d264e1661278f3c3d46ffa"
-  integrity sha512-/uVz/z3GBPSHgvxqIS3m6c0lmt2IASJYW/XlEmwwY4hAEm0tXi3u4z+xwzP1fMwRLB6Z80L3ltQ3x7qzoRcqaQ==
+"@yearn-finance/web-lib@^0.18.32":
+  version "0.18.32"
+  resolved "https://registry.yarnpkg.com/@yearn-finance/web-lib/-/web-lib-0.18.32.tgz#f6fb9ef835a8093deadec19c27824493eac0b985"
+  integrity sha512-uACaNUrGX5EAVcNBzX5CzETn38iamwM2ThP0Ti+AI/EhIwdS/qlicOl9gEdTxl+MzXo2nC4gDg8hY9ca+bZ9BA==
   dependencies:
     "@coinbase/wallet-sdk" "^3.6.4"
     "@ethersproject/experimental" "^5.7.0"

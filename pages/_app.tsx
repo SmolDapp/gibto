@@ -21,12 +21,7 @@ function	MyApp(props: AppProps): ReactElement {
 	return (
 		<>
 			<style jsx global>{`html {font-family: ${inter.style.fontFamily};}`}</style>
-			<WithYearn
-				options={{
-					web3: {
-						supportedChainID: [1, 1337]
-					}
-				}}>
+			<WithYearn>
 				<TokenListContextApp>
 					<WalletContextApp>
 						<main className={`flex h-screen flex-col ${inter.variable}`}>
