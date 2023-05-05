@@ -292,6 +292,7 @@ function	IamReceiver(props: TReceiverProps): ReactElement {
 			</div>
 		);
 	}
+
 	return (
 		<div className={'mx-auto mb-20 grid w-full max-w-5xl'}>
 			<div className={'mt-6 mb-10 flex flex-col justify-center md:mt-20'}>
