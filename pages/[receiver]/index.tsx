@@ -54,7 +54,6 @@ function	IamDescription(props: TReceiverProps): ReactElement {
 				description: description,
 				signature
 			});
-			console.warn(result);
 			if (result.data.error) {
 				toast({type: 'error', content: result.data.error});
 				set_isSaving(false);
@@ -125,7 +124,6 @@ function	IamTwitter(props: TReceiverProps): ReactElement {
 				twitter: twitter,
 				signature
 			});
-			console.warn(result);
 			if (result.data.error) {
 				toast({type: 'error', content: result.data.error});
 				set_isSaving(false);
@@ -408,7 +406,7 @@ function	Receiver(props: TReceiverProps): ReactElement {
 			<IamReceiver {...props} />
 		);
 	}
-	console.log(props);
+
 	return (
 		<div className={'mx-auto grid w-full max-w-5xl'}>
 			<div className={'mt-6 mb-10 flex flex-col justify-center md:mt-20'}>

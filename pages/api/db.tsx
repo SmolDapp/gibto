@@ -88,11 +88,9 @@ async function update(req: NextApiRequest, resp: NextApiResponse): Promise<void>
 async function load(action: string, address: TAddress): Promise<any> {
 	const client = await db.connect();
 
-	console.log(address);
 	if (action === 'LOAD_CREATOR') {
 		try {
 			const {rows} = await client.sql`SELECT * FROM Creators WHERE Address = ${address}`;
-			console.log(rows[0]);
 			return rows[0];
 		} catch (error) {
 			console.log(error);
