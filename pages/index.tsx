@@ -1,11 +1,18 @@
 import React from 'react';
 import CardWithIcon from 'components/CardWithIcon';
+import axios from 'axios';
 
 import type {ReactElement} from 'react';
 
 function	Home(): ReactElement {
+	function	onCreate(): void {
+		axios.post('/api/create', {
+			owner: 'test',
+			description: 'testest'
+		});
+	}
 	return (
-		<div className={'mx-auto grid w-full max-w-4xl'}>
+		<div className={'mx-auto grid w-full max-w-5xl'}>
 			<div className={'mt-6 mb-10 flex flex-col justify-center md:mt-20'}>
 				<h1 className={'mt-4 -ml-1 text-3xl tracking-tight text-neutral-900 md:mt-6 md:text-5xl'}>
 					{'Sponsorship, unrestricted'}
@@ -28,7 +35,7 @@ function	Home(): ReactElement {
 							</svg>
 						)}
 						label={'$1.00'}
-						onClick={(): void => undefined} />
+						onClick={(): void => onCreate()} />
 					<CardWithIcon
 						isSelected={false}
 						icon={(
@@ -61,9 +68,4 @@ function	Home(): ReactElement {
 	);
 }
 
-export default function Wrapper(): ReactElement {
-	return (
-		<Home />
-	);
-}
-
+export default Home;

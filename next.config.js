@@ -11,22 +11,7 @@ module.exports = (phase) => withTM(withPWA({
 	images: {
 		unoptimized: process.env.IPFS_BUILD === 'true' || phase === PHASE_EXPORT,
 		domains: [
-			'rawcdn.githack.com',
 			'raw.githubusercontent.com',
-			'ipfs.io',
-			's3.amazonaws.com',
-			'1inch.exchange',
-			'hut34.io',
-			'www.coingecko.com',
-			'defiprime.com',
-			'cdn.furucombo.app',
-			'gemini.com',
-			'messari.io',
-			'ethereum-optimism.github.io',
-			'tryroll.com',
-			'logo.assets.tkn.eth.limo',
-			'umaproject.org',
-			'cloudflare-ipfs.com',
 			'assets.smold.app'
 		]
 	},
@@ -60,10 +45,15 @@ module.exports = (phase) => withTM(withPWA({
 		},
 		RECEIVER_ADDRESS: '0x10001192576E8079f12d6695b0948C2F41320040',
 		DISPERSE_ADDRESS: '0xD152f549545093347A162Dce210e7293f1452150',
-		COWSWAP_GPV2SETTLEMENT_ADDRESS: '0x9008D19f58AAbD9eD0D60971565AA8510560ab41',
-		COWSWAP_APP_DATA: '0x36feff31915bd0063a70753d8b240559cc79b55029756877924452f43b7090b4',
-		SHOULD_USE_PRESIGN: false,
 		TELEGRAM_BOT: process.env.TELEGRAM_BOT,
-		TELEGRAM_CHAT: process.env.TELEGRAM_CHAT
+		TELEGRAM_CHAT: process.env.TELEGRAM_CHAT,
+		POSTGRES_URL: process.env.POSTGRES_URL,
+		POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL,
+		POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
+		POSTGRES_USER: process.env.POSTGRES_USER,
+		POSTGRES_HOST: process.env.POSTGRES_HOST,
+		POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
+		POSTGRES_DATABASE: process.env.POSTGRES_DATABASE
+
 	}
 }));
