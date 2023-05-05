@@ -8,7 +8,7 @@ function	Home(): ReactElement {
 		<div className={'mx-auto grid w-full max-w-4xl'}>
 			<div className={'mt-6 mb-10 flex flex-col justify-center md:mt-20'}>
 				<h1 className={'mt-4 -ml-1 text-3xl tracking-tight text-neutral-900 md:mt-6 md:text-5xl'}>
-					{'Sponsorship, Unrestricted'}
+					{'Sponsorship, unrestricted'}
 				</h1>
 				<p className={'mt-4 w-full text-base leading-normal text-neutral-500 md:w-3/4 md:text-lg md:leading-8'}>
 					{'Designed to provide unrestricted funding, resources, and guidance to help you bring your ideas to life.'}

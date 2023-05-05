@@ -1,11 +1,11 @@
 {
-	"name": "Dump Services",
-	"short_name": "Dump.Services",
-	"description": "Dump your tokens like a pro",
+	"name": "Giv",
+	"short_name": "gib.to",
+	"description": "Sponsorship, unrestricted",
 	"locale": "en-US",
-	"uri": "https://dump.services/",
-	"og": "https://dump.services/og.png",
-	"iconPath": "https://dump.services/favicons/favicon.svg",
+	"uri": "https://gib.to/",
+	"og": "https://gib.to/og.png",
+	"iconPath": "https://gib.to/favicons/favicon.svg",
 	"twitter": "@smoldapp",
 	"icons": [
 		{
