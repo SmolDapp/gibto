@@ -2,7 +2,6 @@ import {ethers} from 'ethers';
 import {db} from '@vercel/postgres';
 
 import type {NextApiRequest, NextApiResponse} from 'next';
-import type {TAddress} from '@yearn-finance/web-lib/types';
 
 async function update(req: NextApiRequest, resp: NextApiResponse): Promise<void> {
 	const client = await db.connect();
@@ -31,7 +30,6 @@ async function update(req: NextApiRequest, resp: NextApiResponse): Promise<void>
 			return resp.status(500).json({error});
 		}
 	}
-
 	if (action === 'EDIT_DESCRIPTION') {
 		const signer = ethers.utils.verifyMessage(
 			`I want to update my description to "${description}"`,
@@ -83,21 +81,8 @@ async function update(req: NextApiRequest, resp: NextApiResponse): Promise<void>
 			return resp.status(500).json({error});
 		}
 	}
+
+	return resp.status(500).json({error: 'Invalid action'});
 }
 
-async function load(action: string, address: TAddress): Promise<any> {
-	const client = await db.connect();
-
-	if (action === 'LOAD_CREATOR') {
-		try {
-			const {rows} = await client.sql`SELECT * FROM Creators WHERE Address = ${address}`;
-			return rows?.[0] || null;
-		} catch (error) {
-			console.log(error);
-			return null;
-		}
-	}
-}
-
-export {load};
 export default update;

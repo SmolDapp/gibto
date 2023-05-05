@@ -38,7 +38,7 @@ module.exports = (phase) => withTM(withPWA({
 	},
 	env: {
 		JSON_RPC_URL: {
-			1: process.env.RPC_URL_MAINNET,
+			1: 'https://eth.llamarpc.com' || process.env.RPC_URL_MAINNET,
 			10: process.env.RPC_URL_OPTIMISM,
 			250: 'https://rpc3.fantom.network' || process.env.RPC_URL_FANTOM,
 			42161: process.env.RPC_URL_ARBITRUM

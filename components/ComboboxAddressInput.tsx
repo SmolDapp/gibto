@@ -2,6 +2,7 @@ import React, {Fragment, useState} from 'react';
 import Image from 'next/image';
 import IconCheck from 'components/icons/IconCheck';
 import IconChevronBoth from 'components/icons/IconChevronBoth';
+import useWallet from 'contexts/useWallet';
 import {Contract} from 'ethcall';
 import {isAddress} from 'ethers/lib/utils';
 import {Combobox, Transition} from '@headlessui/react';
@@ -10,6 +11,7 @@ import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import ERC20_ABI from '@yearn-finance/web-lib/utils/abi/erc20.abi';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
+import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 import {getProvider, newEthCallProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 
@@ -20,12 +22,14 @@ import type {TAddress, TDict} from '@yearn-finance/web-lib/types';
 
 type TComboboxAddressInput = {
 	possibleDestinations: TDict<TTokenInfo>;
-	tokenToReceive: string;
-	onChangeDestination: Dispatch<SetStateAction<string>>,
+	value: string;
+	onChangeValue: Dispatch<SetStateAction<TTokenInfo>>,
 	onAddPossibleDestination: Dispatch<SetStateAction<TDict<TTokenInfo>>>
 }
 
 function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
+	const	{balances} = useWallet();
+
 	return (
 		<Combobox.Option
 			className={({active: isActive}): string => `relative cursor-pointer select-none py-2 px-4 ${isActive ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-900'}`}
@@ -43,7 +47,10 @@ function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
 						) : <div className={'h-6 w-6 rounded-full bg-neutral-0'} />}
 					</div>
 					<div className={'flex flex-col font-sans text-neutral-900'}>
-						{option.symbol}
+						<span>
+							{`${option.symbol}`}
+							<small className={'text-xs text-neutral-600'}>{` - ${formatAmount(balances?.[toAddress(option.address)]?.normalized || 0, 2, 6)} available`}</small>
+						</span>
 						<small className={'font-number text-xs text-neutral-500'}>{toAddress(option.address)}</small>
 					</div>
 					{isSelected ? (
@@ -58,8 +65,9 @@ function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
 	);
 }
 
-function ComboboxAddressInput({possibleDestinations, tokenToReceive, onChangeDestination, onAddPossibleDestination}: TComboboxAddressInput): ReactElement {
+function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAddPossibleDestination}: TComboboxAddressInput): ReactElement {
 	const	{provider} = useWeb3();
+	const	{balances} = useWallet();
 	const	{safeChainID} = useChainID();
 	const	[query, set_query] = useState('');
 	const	[isOpen, set_isOpen] = useThrottledState(false, 400);
@@ -81,6 +89,7 @@ function ComboboxAddressInput({possibleDestinations, tokenToReceive, onChangeDes
 		const [name, symbol, decimals] = await ethcallProvider.tryAll(calls) as [string, string, BigNumber];
 		return ({name, symbol, decimals: decimals.toNumber()});
 	}, undefined);
+
 	useUpdateEffect((): void => {
 		fetchTokenData.execute(provider, safeChainID, toAddress(query));
 	}, [fetchTokenData, provider, safeChainID, query]);
@@ -106,7 +115,7 @@ function ComboboxAddressInput({possibleDestinations, tokenToReceive, onChangeDes
 					}} />
 			) : null}
 			<Combobox<any>
-				value={tokenToReceive}
+				value={value}
 				onChange={(_selected: TAddress): void => {
 					onAddPossibleDestination((prev: TDict<TTokenInfo>): TDict<TTokenInfo> => {
 						if (prev[_selected]) {
@@ -125,7 +134,14 @@ function ComboboxAddressInput({possibleDestinations, tokenToReceive, onChangeDes
 						});
 					});
 					performBatchedUpdates((): void => {
-						onChangeDestination(_selected);
+						onChangeValue({
+							address: toAddress(_selected),
+							name: possibleDestinations[toAddress(_selected)]?.name || '',
+							symbol: possibleDestinations[toAddress(_selected)]?.symbol || '',
+							decimals: possibleDestinations[toAddress(_selected)]?.decimals || 18,
+							chainId: possibleDestinations[toAddress(_selected)].chainId || safeChainID,
+							logoURI: possibleDestinations[toAddress(_selected)]?.logoURI || ''
+						});
 						set_isOpen(false);
 					});
 				}}>
@@ -134,12 +150,12 @@ function ComboboxAddressInput({possibleDestinations, tokenToReceive, onChangeDes
 						onClick={(): void => set_isOpen((o: boolean): boolean => !o)}
 						className={'box-0 grow-1 col-span-12 flex h-10 w-full items-center p-2 px-4 md:col-span-9'}>
 						<div className={'relative flex w-full flex-row items-center space-x-4'}>
-							<div key={tokenToReceive} className={'h-6 w-6'}>
-								{(possibleDestinations?.[toAddress(tokenToReceive)]?.logoURI || '') !== '' ? (
+							<div key={value} className={'h-6 w-6'}>
+								{(possibleDestinations?.[toAddress(value)]?.logoURI || '') !== '' ? (
 									<Image
 										alt={''}
 										unoptimized
-										src={possibleDestinations?.[toAddress(tokenToReceive)]?.logoURI}
+										src={possibleDestinations?.[toAddress(value)]?.logoURI}
 										width={24}
 										height={24} />
 								) : <div className={'h-6 w-6 rounded-full bg-neutral-0'} />}
@@ -191,7 +207,9 @@ function ComboboxAddressInput({possibleDestinations, tokenToReceive, onChangeDes
 									}} />
 
 							) : (
-								filteredDestinations.map((dest): ReactElement => (
+								filteredDestinations.filter((dest): boolean => {
+									return (balances?.[toAddress(dest.address)]?.raw?.gt(0) || false);
+								}).map((dest): ReactElement => (
 									<ComboboxOption key={dest.address} option={dest} />
 								))
 							)}
