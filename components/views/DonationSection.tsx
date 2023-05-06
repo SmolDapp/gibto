@@ -2,6 +2,7 @@ import {useCallback, useEffect, useState} from 'react';
 import CardWithIcon from 'components/CardWithIcon';
 import ComboboxAddressInput from 'components/ComboboxAddressInput';
 import {useWallet} from 'contexts/useWallet';
+import {ethers} from 'ethers';
 import {handleInputChangeEventValue} from 'utils';
 import {sendEther} from 'utils/actions/sendEth';
 import {transfer} from 'utils/actions/transferERC20';
@@ -13,8 +14,7 @@ import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {isZeroAddress, toAddress} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS, WETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
-import {toSafeAmount} from '@yearn-finance/web-lib/utils/format';
-import {toNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
+import {toNormalizedBN, Zero} from '@yearn-finance/web-lib/utils/format.bigNumber';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
@@ -174,9 +174,9 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 	}, [price, safeChainID, tokenToSend.address]);
 
 	const onComputeAmountFromValue = useCallback((value: number): void => {
-		const	amountNormalized = value / price[safeChainID][tokenToSend.address];
-		const	amountAsBN = toSafeAmount(amountNormalized.toFixed(6).toString(), tokenToSend.decimals);
-		set_amountToSend({...toNormalizedBN(amountAsBN), value});
+		const amountNormalized = value / price[safeChainID][tokenToSend.address];
+		const amountAsBN = ethers.utils.parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
+		set_amountToSend({...toNormalizedBN(amountAsBN, tokenToSend.decimals), value});
 	}, [price, safeChainID, tokenToSend.address, tokenToSend.decimals]);
 
 	const onRefreshPrice = useCallback(async (): Promise<void> => {
@@ -199,8 +199,8 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 			//If a specific value is selected, we don't want to change it, so we only update the value to match the new price
 			if ([10, 50, 100].includes(Number(formatAmount(newAmount.value, 2, 2)))) {
 				const amountNormalized = newAmount.value / Number(response?.data?.[tokenAddress.toLowerCase()]?.usd || 0);
-				const amountAsBN = toSafeAmount(amountNormalized.toFixed(6).toString(), tokenToSend.decimals);
-				const normalizedBNAmount = toNormalizedBN(amountAsBN);
+				const	amountAsBN = ethers.utils.parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
+				const normalizedBNAmount = toNormalizedBN(amountAsBN, tokenToSend.decimals);
 				newAmount.normalized = normalizedBNAmount.normalized;
 				newAmount.raw = normalizedBNAmount.raw;
 			} else {
@@ -214,7 +214,6 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 		onRefreshPrice();
 	}, [onRefreshPrice]);
 
-	console.log(balances, amountToSend.raw, balances?.[toAddress(tokenToSend.address)]?.raw);
 	return (
 		<div className={'grid grid-cols-3 gap-4'}>
 			<div className={'relative grid grid-cols-1 gap-2 md:grid-cols-1'}>
@@ -293,14 +292,22 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 					<Button
 						className={'w-full'}
 						isBusy={txStatus.pending}
-						isDisabled={!isActive || amountToSend.raw.isZero() || (amountToSend.raw.gt(balances?.[toAddress(tokenToSend.address)]?.raw))}
+						isDisabled={
+							!isActive ||
+							(amountToSend?.raw || Zero)?.isZero() ||
+							(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero)
+						}
 						onClick={(): void => {
 							onDonate();
 						}}>
 						{'Donate'}
 					</Button>
-					<div className={'font-number pt-1 text-center text-xxs text-neutral-400'} suppressHydrationWarning>
-						{`You have ${formatAmount(balances?.[tokenToSend.address]?.normalized || 0, 2, 2)} ${tokenToSend.symbol}`}
+					<div className={'font-number w-full pt-1 text-center text-xxs text-neutral-400'}>
+						<button
+							suppressHydrationWarning
+							onClick={(): void => onComputeValueFromAmount(balances?.[tokenToSend.address])}>
+							{`You have ${formatAmount(balances?.[tokenToSend.address]?.normalized || 0, 2, 6)} ${tokenToSend.symbol}`}
+						</button>
 					</div>
 				</div>
 
