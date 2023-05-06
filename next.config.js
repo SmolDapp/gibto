@@ -47,7 +47,7 @@ module.exports = (phase) => withTM(withPWA({
 		DISPERSE_ADDRESS: '0xD152f549545093347A162Dce210e7293f1452150',
 		TELEGRAM_BOT: process.env.TELEGRAM_BOT,
 		TELEGRAM_CHAT: process.env.TELEGRAM_CHAT,
-		BASE_API_URI: 'http://localhost:8080'
-		// BASE_API_URI: 'https://api.docudroid.app'
+		// BASE_API_URI: 'http://localhost:8080'
+		BASE_API_URI: 'https://api.docudroid.app'
 	}
 }));
