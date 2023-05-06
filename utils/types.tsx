@@ -30,4 +30,5 @@ export type TReceiverProps = {
 	reddit: string;
 	discord: string;
 	isCreated: boolean;
+	isVerified: boolean;
 }

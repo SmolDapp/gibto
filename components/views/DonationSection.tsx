@@ -3,19 +3,24 @@ import CardWithIcon from 'components/CardWithIcon';
 import ComboboxAddressInput from 'components/ComboboxAddressInput';
 import {useWallet} from 'contexts/useWallet';
 import {handleInputChangeEventValue} from 'utils';
+import {sendEther} from 'utils/actions/sendEth';
+import {transfer} from 'utils/actions/transferERC20';
 import cowswapTokenList from 'utils/tokenLists.json';
 import axios from 'axios';
 import {useMountEffect, useUpdateEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {isZeroAddress, toAddress} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS, WETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
 import {toSafeAmount} from '@yearn-finance/web-lib/utils/format';
 import {toNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
+import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import type {TTokenInfo, TTokenList} from 'contexts/useTokenList';
 import type {ChangeEvent, Dispatch, ReactElement, SetStateAction} from 'react';
+import type {TReceiverProps} from 'utils/types';
 import type {TDict, TNDict} from '@yearn-finance/web-lib/types';
 import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
@@ -106,12 +111,14 @@ function	AmountToSend({token, amountToSend, onChange}: {
 	);
 }
 
-function	DonationSection(): ReactElement {
-	const	{safeChainID} = useChainID();
-	const	{balances} = useWallet();
-	const	[selectedAmount, set_selectedAmount] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0), value: 0});
-	const	[price, set_price] = useState<TNDict<TDict<number>>>({});
-	const	[tokenToSend, set_tokenToSend] = useState<TTokenInfo>({
+function	DonationSection(props: TReceiverProps): ReactElement {
+	const {provider, isActive} = useWeb3();
+	const {safeChainID} = useChainID();
+	const {balances, refresh} = useWallet();
+	const [txStatus, set_txStatus] = useState(defaultTxStatus);
+	const [price, set_price] = useState<TNDict<TDict<number>>>({});
+	const [amountToSend, set_amountToSend] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0), value: 0});
+	const [tokenToSend, set_tokenToSend] = useState<TTokenInfo>({
 		address: ETH_TOKEN_ADDRESS,
 		chainId: 1,
 		name: 'Ether',
@@ -120,15 +127,56 @@ function	DonationSection(): ReactElement {
 		logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
 	});
 
+	async function	onDonate(): Promise<void> {
+		if (toAddress(tokenToSend.address) === ETH_TOKEN_ADDRESS) {
+			new Transaction(provider, sendEther, set_txStatus).populate(
+				toAddress(props.address),
+				amountToSend.raw,
+				balances[ETH_TOKEN_ADDRESS]?.raw
+			).onSuccess(async (): Promise<void> => {
+				await refresh([
+					{
+						token: ETH_TOKEN_ADDRESS,
+						decimals: balances[ETH_TOKEN_ADDRESS].decimals,
+						symbol: balances[ETH_TOKEN_ADDRESS].symbol,
+						name: balances[ETH_TOKEN_ADDRESS].name
+					}
+				]);
+			}).perform();
+		} else {
+			new Transaction(provider, transfer, set_txStatus).populate(
+				toAddress(tokenToSend.address),
+				toAddress(props.address),
+				amountToSend.raw,
+				balances[tokenToSend.address]?.raw
+			).onSuccess(async (): Promise<void> => {
+				await refresh([
+					{
+						token: ETH_TOKEN_ADDRESS,
+						decimals: balances[ETH_TOKEN_ADDRESS].decimals,
+						symbol: balances[ETH_TOKEN_ADDRESS].symbol,
+						name: balances[ETH_TOKEN_ADDRESS].name
+					},
+					{
+						token: toAddress(tokenToSend.address),
+						decimals: tokenToSend.decimals,
+						symbol: tokenToSend.symbol,
+						name: tokenToSend.name
+					}
+				]);
+			}).perform();
+		}
+	}
+
 	const onComputeValueFromAmount = useCallback((amount: TNormalizedBN): void => {
 		const	value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
-		set_selectedAmount({...amount, value});
+		set_amountToSend({...amount, value});
 	}, [price, safeChainID, tokenToSend.address]);
 
 	const onComputeAmountFromValue = useCallback((value: number): void => {
 		const	amountNormalized = value / price[safeChainID][tokenToSend.address];
 		const	amountAsBN = toSafeAmount(amountNormalized.toFixed(6).toString(), tokenToSend.decimals);
-		set_selectedAmount({...toNormalizedBN(amountAsBN), value});
+		set_amountToSend({...toNormalizedBN(amountAsBN), value});
 	}, [price, safeChainID, tokenToSend.address, tokenToSend.decimals]);
 
 	const onRefreshPrice = useCallback(async (): Promise<void> => {
@@ -146,7 +194,7 @@ function	DonationSection(): ReactElement {
 			newPrice[safeChainID][tokenToSend.address] = Number(response?.data?.[tokenAddress.toLowerCase()]?.usd || 0);
 			return newPrice;
 		});
-		set_selectedAmount((prev): TNormalizedBN & {value: number} => {
+		set_amountToSend((prev): TNormalizedBN & {value: number} => {
 			const	newAmount = {...prev};
 			//If a specific value is selected, we don't want to change it, so we only update the value to match the new price
 			if ([10, 50, 100].includes(Number(formatAmount(newAmount.value, 2, 2)))) {
@@ -166,11 +214,12 @@ function	DonationSection(): ReactElement {
 		onRefreshPrice();
 	}, [onRefreshPrice]);
 
+	console.log(balances, amountToSend.raw, balances?.[toAddress(tokenToSend.address)]?.raw);
 	return (
 		<div className={'grid grid-cols-3 gap-4'}>
 			<div className={'relative grid grid-cols-1 gap-2 md:grid-cols-1'}>
 				<CardWithIcon
-					isSelected={Number(formatAmount(selectedAmount.value, 2, 2)) === 10}
+					isSelected={Number(formatAmount(amountToSend.value, 2, 2)) === 10}
 					icon={(
 						<svg
 							xmlns={'http://www.w3.org/2000/svg'}
@@ -182,7 +231,7 @@ function	DonationSection(): ReactElement {
 					label={'$10.00'}
 					onClick={(): void => onComputeAmountFromValue(10)} />
 				<CardWithIcon
-					isSelected={Number(formatAmount(selectedAmount.value, 2, 2)) === 50}
+					isSelected={Number(formatAmount(amountToSend.value, 2, 2)) === 50}
 					icon={(
 						<svg
 							xmlns={'http://www.w3.org/2000/svg'}
@@ -194,7 +243,7 @@ function	DonationSection(): ReactElement {
 					label={'$50.00'}
 					onClick={(): void => onComputeAmountFromValue(50)} />
 				<CardWithIcon
-					isSelected={Number(formatAmount(selectedAmount.value, 2, 2)) === 100}
+					isSelected={Number(formatAmount(amountToSend.value, 2, 2)) === 100}
 					icon={(
 						<svg
 							xmlns={'http://www.w3.org/2000/svg'}
@@ -206,7 +255,7 @@ function	DonationSection(): ReactElement {
 					label={'$100.00'}
 					onClick={(): void => onComputeAmountFromValue(100)} />
 				<CardWithIcon
-					isSelected={![0, 10, 50, 100].includes(Number(formatAmount(selectedAmount.value, 2, 2)))}
+					isSelected={![0, 10, 50, 100].includes(Number(formatAmount(amountToSend.value, 2, 2)))}
 					icon={(
 						<svg
 							xmlns={'http://www.w3.org/2000/svg'}
@@ -234,15 +283,20 @@ function	DonationSection(): ReactElement {
 				<div className={'flex h-full flex-col items-center justify-center py-20'}>
 					<AmountToSend
 						token={tokenToSend}
-						amountToSend={selectedAmount}
+						amountToSend={amountToSend}
 						onChange={(v): void => onComputeValueFromAmount(v as never)} />
 					<p className={'font-number text-center text-xs text-neutral-600'} suppressHydrationWarning>
-						{`${tokenToSend.symbol} ≈ $${formatAmount(selectedAmount.value, 0, 2)}`}
+						{`${tokenToSend.symbol} ≈ $${formatAmount(amountToSend.value, 0, 2)}`}
 					</p>
 				</div>
 				<div>
 					<Button
-						className={'w-full'}>
+						className={'w-full'}
+						isBusy={txStatus.pending}
+						isDisabled={!isActive || amountToSend.raw.isZero() || (amountToSend.raw.gt(balances?.[toAddress(tokenToSend.address)]?.raw))}
+						onClick={(): void => {
+							onDonate();
+						}}>
 						{'Donate'}
 					</Button>
 					<div className={'font-number pt-1 text-center text-xxs text-neutral-400'} suppressHydrationWarning>

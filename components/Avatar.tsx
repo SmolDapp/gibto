@@ -19,7 +19,7 @@ function Avatar({src}: {src: string}): ReactElement {
 			) : (
 				<Image
 					src={(src || URL)}
-					alt={'Profile picture'}
+					alt={''}
 					className={'!h-12 !w-12 rounded-2xl object-cover'}
 					width={400}
 					height={400}

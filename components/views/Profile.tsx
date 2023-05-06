@@ -6,7 +6,7 @@ import HeroSection from './HeroSection';
 import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
 
-function	IamReceiver(props: TReceiverProps): ReactElement {
+function	Profile(props: TReceiverProps): ReactElement {
 	return (
 		<>
 			<HeroSection {...props} />
@@ -17,18 +17,17 @@ function	IamReceiver(props: TReceiverProps): ReactElement {
 					</h2>
 					<div className={'mt-4 space-y-2 text-sm text-neutral-400'}>
 						{'No description provided.'}
-
 					</div>
 				</div>
 				<div className={'mb-72'}>
 					<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
 						{'Donate'}
 					</h2>
-					<DonationSection />
+					<DonationSection {...props} />
 				</div>
 			</div>
 		</>
 	);
 }
 
-export default IamReceiver;
+export default Profile;
