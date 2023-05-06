@@ -1,6 +1,4 @@
-import type {BigNumber} from 'ethers';
 import type {ReactElement} from 'react';
-import type {TAddress} from '@yearn-finance/web-lib/types';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type Maybe<T> = T | null | undefined;
@@ -16,10 +14,20 @@ export type TToken = {
 	icon?: ReactElement;
 }
 
-export type TInitSolverArgs = {
-	from: TAddress,
-	receiver: TAddress,
-	inputToken: TToken
-	outputToken: TToken
-	inputAmount: BigNumber
+export type TReceiverProps = {
+	address: string;
+	name: string;
+	ensHandle: string;
+	lensHandle: string;
+	description: string;
+	avatar: string;
+	cover: string;
+	email: string;
+	website: string;
+	telegram: string;
+	twitter: string;
+	github: string;
+	reddit: string;
+	discord: string;
+	isCreated: boolean;
 }
