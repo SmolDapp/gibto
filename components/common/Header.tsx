@@ -173,7 +173,7 @@ function	WalletSelector(): ReactElement {
 
 function	AppHeader(): ReactElement {
 	const	{pathname} = useRouter();
-	const	{isActive, address, options} = useWeb3();
+	const	{isActive, ens, address, options} = useWeb3();
 
 	const supportedChainID = useMemo((): number[] => (
 		options?.supportedChainID || [1]
@@ -182,10 +182,10 @@ function	AppHeader(): ReactElement {
 	const nav = useMemo((): TMenu[] => {
 		const nav: TMenu[] = [{path: '/', label: <Logo className={'h-8 text-neutral-900'} />}];
 		if (isActive) {
-			nav.push({path: `/${address}`, label: 'My profile'});
+			nav.push({path: `/${ens || address}`, label: 'My profile'});
 		}
 		return nav;
-	}, [isActive, address]);
+	}, [isActive, ens, address]);
 
 	return (
 		<div id={'head'} className={'fixed inset-x-0 top-0 z-50 w-full border-b border-neutral-100 bg-neutral-0/95'}>
@@ -194,7 +194,7 @@ function	AppHeader(): ReactElement {
 					<Navbar currentPathName={pathname || ''} nav={nav} />
 					<div className={'flex w-1/3 md:hidden'}>
 						<Logo className={'mt-2 h-6 text-neutral-700'} />
-						<Link href={`/${address}`} className={'ml-2 text-sm text-neutral-400 transition-colors hover:text-neutral-900'}>
+						<Link href={`/${ens || address}`} className={'ml-2 text-sm text-neutral-400 transition-colors hover:text-neutral-900'}>
 							{'My profile'}
 						</Link>
 					</div>

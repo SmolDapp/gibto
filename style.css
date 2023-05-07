@@ -90,7 +90,7 @@
 	}
 }
 .yearn--table-wrapper {
-	@apply grid w-full grid-cols-1 border-t border-neutral-200 py-2 px-4 md:grid-cols-9 md:border-none md:px-6;
+	@apply grid w-full grid-cols-1 border border-neutral-200 py-2 px-4 md:grid-cols-9 md:px-6 rounded;
 }
 .yearn--table-token-section {
 	@apply col-span-3 mb-2 flex flex-row items-center justify-between py-4 md:mb-0 md:py-0;

@@ -34,3 +34,20 @@ export type TReceiverProps = {
 	isVerified: boolean;
 	identitySource: 'on-chain' | 'off-chain';
 } & {mutate: () => void};
+
+export type TDonationsProps = {
+	UUID: string;
+	from: string
+	to: string
+	token: string
+	tokenName: string
+	amountRaw: string
+	amount: number
+	value: number
+	pricePerToken: number
+	txHash: string
+	chainID: number
+	decimals: number
+	time: number
+	isVerified: boolean
+}

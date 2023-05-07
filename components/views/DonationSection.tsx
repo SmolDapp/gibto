@@ -19,6 +19,7 @@ import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import type {TTokenInfo, TTokenList} from 'contexts/useTokenList';
+import type {TUseBalancesTokens} from 'hooks/useBalances';
 import type {ChangeEvent, Dispatch, ReactElement, SetStateAction} from 'react';
 import type {TReceiverProps} from 'utils/types';
 import type {TDict, TNDict} from '@yearn-finance/web-lib/types';
@@ -111,10 +112,11 @@ function	AmountToSend({token, amountToSend, onChange}: {
 	);
 }
 
-function	DonationSection(props: TReceiverProps): ReactElement {
-	const {provider, isActive} = useWeb3();
+type TOnDonateCallback = (toRefresh?: TUseBalancesTokens) => Promise<void>;
+function	DonationSection(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
+	const {address, provider, isActive} = useWeb3();
 	const {safeChainID} = useChainID();
-	const {balances, refresh} = useWallet();
+	const {balances} = useWallet();
 	const [txStatus, set_txStatus] = useState(defaultTxStatus);
 	const [price, set_price] = useState<TNDict<TDict<number>>>({});
 	const [amountToSend, set_amountToSend] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0), value: 0});
@@ -127,21 +129,33 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 		logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
 	});
 
-	async function	onDonate(): Promise<void> {
+	const onRegisterDonation = useCallback(async (txHash: string): Promise<void> => {
+		try {
+			await axios.post(`${process.env.BASE_API_URI}/give/${toAddress(props.address)}`, {
+				from: address,
+				to: props.address,
+				token: tokenToSend.address,
+				amount: amountToSend.raw.toString(),
+				txHash: txHash,
+				chainID: safeChainID
+			});
+			props.mutate();
+		} catch (e) {
+			console.error(e);
+		}
+	}, [address, amountToSend.raw, props, safeChainID, tokenToSend.address]);
+
+	const onDonate = useCallback(async (): Promise<void> => {
 		if (toAddress(tokenToSend.address) === ETH_TOKEN_ADDRESS) {
 			new Transaction(provider, sendEther, set_txStatus).populate(
 				toAddress(props.address),
 				amountToSend.raw,
 				balances[ETH_TOKEN_ADDRESS]?.raw
-			).onSuccess(async (): Promise<void> => {
-				await refresh([
-					{
-						token: ETH_TOKEN_ADDRESS,
-						decimals: balances[ETH_TOKEN_ADDRESS].decimals,
-						symbol: balances[ETH_TOKEN_ADDRESS].symbol,
-						name: balances[ETH_TOKEN_ADDRESS].name
-					}
-				]);
+			).onSuccess(async (receipt): Promise<void> => {
+				if (receipt?.transactionHash) {
+					await onRegisterDonation(receipt.transactionHash);
+				}
+				await props.onDonateCallback();
 			}).perform();
 		} else {
 			new Transaction(provider, transfer, set_txStatus).populate(
@@ -149,24 +163,19 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 				toAddress(props.address),
 				amountToSend.raw,
 				balances[tokenToSend.address]?.raw
-			).onSuccess(async (): Promise<void> => {
-				await refresh([
-					{
-						token: ETH_TOKEN_ADDRESS,
-						decimals: balances[ETH_TOKEN_ADDRESS].decimals,
-						symbol: balances[ETH_TOKEN_ADDRESS].symbol,
-						name: balances[ETH_TOKEN_ADDRESS].name
-					},
-					{
-						token: toAddress(tokenToSend.address),
-						decimals: tokenToSend.decimals,
-						symbol: tokenToSend.symbol,
-						name: tokenToSend.name
-					}
-				]);
+			).onSuccess(async (receipt): Promise<void> => {
+				if (receipt?.transactionHash) {
+					await onRegisterDonation(receipt.transactionHash);
+				}
+				await props.onDonateCallback({
+					token: toAddress(tokenToSend.address),
+					decimals: tokenToSend.decimals,
+					symbol: tokenToSend.symbol,
+					name: tokenToSend.name
+				});
 			}).perform();
 		}
-	}
+	}, [amountToSend.raw, balances, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
 
 	const onComputeValueFromAmount = useCallback((amount: TNormalizedBN): void => {
 		const	value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
@@ -297,9 +306,7 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 							(amountToSend?.raw || Zero)?.isZero() ||
 							(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero)
 						}
-						onClick={(): void => {
-							onDonate();
-						}}>
+						onClick={onDonate}>
 						{'Donate'}
 					</Button>
 					<div className={'font-number w-full pt-1 text-center text-xxs text-neutral-400'}>
@@ -310,7 +317,6 @@ function	DonationSection(props: TReceiverProps): ReactElement {
 						</button>
 					</div>
 				</div>
-
 			</div>
 		</div>
 	);
