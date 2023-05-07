@@ -1,6 +1,5 @@
 import React, {Fragment, useState} from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import Avatar from 'components/Avatar';
 import Cover from 'components/Cover';
 import IconCircleCross from 'components/icons/IconCircleCross';
@@ -11,9 +10,11 @@ import SocialMediaCard from 'components/SocialMediaCard';
 import {ethers} from 'ethers';
 import {namehash} from 'ethers/lib/utils';
 import ENS_RESOLVER_ABI from 'utils/abi/ENSResolver.abi';
+import axios from 'axios';
 import {motion} from 'framer-motion';
 import {Dialog, Transition} from '@headlessui/react';
 import {Button} from '@yearn-finance/web-lib/components/Button';
+import {yToast} from '@yearn-finance/web-lib/components/yToast';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import IconSocialDiscord from '@yearn-finance/web-lib/icons/IconSocialDiscord';
 import IconSocialGithub from '@yearn-finance/web-lib/icons/IconSocialGithub';
@@ -26,24 +27,15 @@ import type {Dispatch, ReactElement, SetStateAction} from 'react';
 import type {TReceiverProps} from 'utils/types';
 import type {TTxResponse} from '@yearn-finance/web-lib/utils/web3/transaction';
 
-
 function EditProfileDialog({identity, isOpen, set_isOpen}: {
 	identity: TReceiverProps,
 	isOpen: boolean,
 	set_isOpen: Dispatch<SetStateAction<boolean>>,
 }): ReactElement {
-	const	{provider, ens} = useWeb3();
+	const	{address, provider, ens} = useWeb3();
+	const	{toast} = yToast();
 	const	[fields, set_fields] = useState<TReceiverProps>(identity);
 	const	[txStatus, set_txStatus] = useState(defaultTxStatus);
-
-	async function	onSubmitRecords(): Promise<void> {
-		if (!ens) {
-			return;
-		}
-		new Transaction(provider, onSubmit, set_txStatus)
-			.populate({ens, fields})
-			.perform();
-	}
 
 	async function	onSubmit(
 		provider: ethers.providers.JsonRpcProvider | ethers.providers.JsonRpcProvider,
@@ -87,6 +79,73 @@ function EditProfileDialog({identity, isOpen, set_isOpen}: {
 
 		const contract = new ethers.Contract(toAddress(resolver?.address), ENS_RESOLVER_ABI, signer);
 		return await handleTx(contract.multicall(multicalls));
+	}
+	async function	onSubmitRecords(): Promise<void> {
+		if (identity.identitySource === 'on-chain') {
+			if (!ens) {
+				return;
+			}
+			new Transaction(provider, onSubmit, set_txStatus)
+				.populate({ens, fields})
+				.onSuccess(async (): Promise<void> => {
+					identity.mutate();
+					set_isOpen(false);
+				}).perform();
+		} else {
+			try {
+				set_txStatus({...defaultTxStatus, pending: true});
+
+				const changes: Partial<TReceiverProps> = {};
+				if (identity.avatar !== fields.avatar) {
+					changes.avatar = fields.avatar;
+				}
+				if (identity.cover !== fields.cover) {
+					changes.cover = fields.cover;
+				}
+				if (identity.description !== fields.description) {
+					changes.description = fields.description;
+				}
+				if (identity.discord !== fields.discord) {
+					changes.discord = fields.discord;
+				}
+				if (identity.github !== fields.github) {
+					changes.github = fields.github;
+				}
+				if (identity.reddit !== fields.reddit) {
+					changes.reddit = fields.reddit;
+				}
+				if (identity.telegram !== fields.telegram) {
+					changes.telegram = fields.telegram;
+				}
+				if (identity.twitter !== fields.twitter) {
+					changes.twitter = fields.twitter;
+				}
+				if (identity.website !== fields.website) {
+					changes.website = fields.website;
+				}
+				if (identity.email !== fields.email) {
+					changes.email = fields.email;
+				}
+				const signer = await provider.getSigner();
+				const signature = await signer.signMessage(Object.entries(changes).map(([key, value]): string => `${key}: ${value}`).join('\n'));
+				const {data: profile} = await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
+					...changes,
+					type: 'profile',
+					address: toAddress(address),
+					signature
+				});
+				console.log(profile);
+				toast({type: 'success', content: 'Profile updated!'});
+				identity.mutate();
+				set_isOpen(false);
+				setTimeout((): void => set_txStatus(defaultTxStatus), 3000);
+			} catch (e) {
+				console.error(e);
+				set_txStatus({...defaultTxStatus, error: true});
+				setTimeout((): void => set_txStatus(defaultTxStatus), 3000);
+				toast({type: 'error', content: (e as any)?.message || (e as any)?.response?.data?.message || 'Something went wrong!'});
+			}
+		}
 	}
 
 	function renderSocialFields(): ReactElement {
@@ -180,6 +239,7 @@ function EditProfileDialog({identity, isOpen, set_isOpen}: {
 			</fieldset>
 		);
 	}
+
 	function renderInfoFields(): ReactElement {
 		return (
 			<fieldset className={'col-span-8 w-full space-y-4 text-xs md:text-sm'}>
@@ -267,13 +327,12 @@ function EditProfileDialog({identity, isOpen, set_isOpen}: {
 					e.preventDefault();
 					await onSubmitRecords();
 				}}
-				className={'mt-4 grid grid-cols-12 gap-x-10 gap-y-4 border-t border-neutral-100 pt-4'}>
+				className={'mt-6 grid grid-cols-12 gap-x-10 gap-y-4'}>
 				{renderInfoFields()}
 				{renderSocialFields()}
 			</form>
 		);
 	}
-
 
 	return (
 		<Transition
@@ -330,6 +389,106 @@ function EditProfileDialog({identity, isOpen, set_isOpen}: {
 	);
 }
 
+function EditIdentitySourceDialog({identity, isOpen, set_isOpen}: {
+	identity: TReceiverProps,
+	isOpen: boolean,
+	set_isOpen: Dispatch<SetStateAction<boolean>>,
+}): ReactElement {
+	const	{address, provider} = useWeb3();
+	const	{toast} = yToast();
+	const	[isSaving, set_isSaving] = useState(false);
+
+	async function	onChangeIdentitySource(source: 'on-chain' | 'off-chain'): Promise<void> {
+		try {
+			set_isSaving(true);
+			const signer = await provider.getSigner();
+			const signature = await signer.signMessage(source);
+			await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
+				identitySource: source,
+				type: 'identitySource',
+				address: toAddress(address),
+				signature
+			});
+			toast({type: 'success', content: 'Identity source updated!'});
+			identity.mutate();
+			set_isOpen(false);
+		} catch (e) {
+			console.error(e);
+			toast({type: 'error', content: (e as any)?.message || (e as any)?.response?.data?.message || 'Something went wrong!'});
+		}
+		set_isSaving(false);
+	}
+
+	return (
+		<Transition
+			appear
+			show={isOpen}
+			as={Fragment}>
+			<Dialog
+				as={'div'}
+				onClose={(): void => set_isOpen(false)}
+				className={'relative z-50 flex'}>
+				<Transition.Child
+					as={Fragment}
+					enter={'ease-out duration-300'}
+					enterFrom={'opacity-0'}
+					enterTo={'opacity-100'}
+					leave={'ease-in duration-200'}
+					leaveFrom={'opacity-100'}
+					leaveTo={'opacity-0'}>
+					<div className={'fixed inset-0 bg-neutral-900/30'} />
+				</Transition.Child>
+				<div className={'fixed inset-0 overflow-y-auto'}>
+					<div className={'mx-auto flex min-h-full w-full justify-center pt-32'}>
+						<Transition.Child
+							as={Fragment}
+							enter={'ease-out duration-300'}
+							enterFrom={'opacity-0 scale-95'}
+							enterTo={'opacity-100 scale-100'}
+							leave={'ease-in duration-200'}
+							leaveFrom={'opacity-100 scale-100'}
+							leaveTo={'opacity-0 scale-95'}>
+							<Dialog.Panel className={'mx-auto w-full items-center'}>
+								<div className={'box-0 relative mx-auto grid w-full max-w-3xl grid-cols-12'}>
+									<button
+										onClick={(): void => set_isOpen(false)}
+										className={'absolute right-4 top-4'}>
+										<IconCircleCross className={'h-4 w-4 text-neutral-400 transition-colors hover:text-neutral-900'} />
+									</button>
+									<div className={'col-span-12 flex flex-col p-4 text-neutral-900 md:p-6 md:pb-4'}>
+										<div className={'w-full md:w-5/6'}>
+											<b className={'text-base'}>{'Choose your Identity Source'}</b>
+											<p className={'pt-2 text-sm text-neutral-500'}>
+												{'By default if you have an ENS name, your identity will be onChain and when updating your profile, the changes will be stored on-chain as ENS records. However, you may want to change to an offChain source to avoid paying gas fees.'}
+											</p>
+										</div>
+										<div className={'flex w-full flex-row space-x-4 pt-10'}>
+											<Button
+												isBusy={isSaving}
+												onClick={async (): Promise<void> => onChangeIdentitySource('off-chain')}
+												className={'w-full'}
+												variant={'outlined'}>
+												{`${identity.identitySource === 'off-chain' ? 'Keep' : 'Use'} Off-Chain`}
+											</Button>
+											<Button
+												isBusy={isSaving}
+												onClick={async (): Promise<void> => onChangeIdentitySource('on-chain')}
+												className={'w-full'}>
+												{`${identity.identitySource === 'on-chain' ? 'Keep' : 'Use'} On-Chain`}
+											</Button>
+										</div>
+									</div>
+								</div>
+							</Dialog.Panel>
+						</Transition.Child>
+					</div>
+				</div>
+			</Dialog>
+		</Transition>
+	);
+}
+
+
 function GoalSection(): ReactElement {
 	return (
 		<div className={'font-number col-span-5 flex w-full flex-col overflow-hidden border-l border-neutral-200 pl-10 text-xs md:text-sm'}>
@@ -369,7 +528,7 @@ function GoalSection(): ReactElement {
 	);
 }
 
-function AboutSection(props: TReceiverProps): ReactElement {
+function ProfileSection(props: TReceiverProps): ReactElement {
 	function	renderCheck(): ReactElement {
 		if (props.isVerified) {
 			return (
@@ -385,7 +544,7 @@ function AboutSection(props: TReceiverProps): ReactElement {
 	}
 
 	return (
-		<div className={'col-span-7 flex flex-col'}>
+		<div className={'relative col-span-7 flex flex-col'}>
 			<div className={'-ml-2 flex flex-row items-center'}>
 				<Avatar src={props.avatar} />
 				<span>
@@ -402,27 +561,27 @@ function AboutSection(props: TReceiverProps): ReactElement {
 			<div className={'mt-auto flex flex-row space-x-4 pt-6'}>
 				<SocialMediaCard
 					href={`https://twitter.com/${props.twitter}`}
-					className={props.twitter ? '' : 'pointer-events-none cursor-not-allowed opacity-40'}
+					className={props.twitter ? '' : 'pointer-events-none opacity-40'}
 					icon={<IconSocialTwitter />} />
 				<SocialMediaCard
 					href={`https://github.com/${props.github}`}
-					className={props.github ? '' : 'pointer-events-none cursor-not-allowed opacity-40'}
+					className={props.github ? '' : 'pointer-events-none opacity-40'}
 					icon={<IconSocialGithub />} />
 				<SocialMediaCard
 					href={`https://discord.gg/${props.discord}`}
-					className={props.discord ? '' : 'pointer-events-none cursor-not-allowed opacity-40'}
+					className={props.discord ? '' : 'pointer-events-none opacity-40'}
 					icon={<IconSocialDiscord />} />
 				<SocialMediaCard
 					href={`https://reddit.com/${props.reddit}`}
-					className={props.reddit ? '' : 'pointer-events-none cursor-not-allowed opacity-40'}
+					className={props.reddit ? '' : 'pointer-events-none opacity-40'}
 					icon={<IconSocialReddit />} />
 				<SocialMediaCard
 					href={`https://t.me/${props.telegram}`}
-					className={props.telegram ? '' : 'pointer-events-none cursor-not-allowed opacity-40'}
+					className={props.telegram ? '' : 'pointer-events-none opacity-40'}
 					icon={<IconSocialTelegram />} />
 				<SocialMediaCard
 					href={`https://${props.website}`}
-					className={props.website ? '' : 'pointer-events-none cursor-not-allowed opacity-40'}
+					className={props.website ? '' : 'pointer-events-none opacity-40'}
 					icon={<IconSocialWebsite />} />
 			</div>
 		</div>
@@ -431,37 +590,11 @@ function AboutSection(props: TReceiverProps): ReactElement {
 
 function HeroSection(props: TReceiverProps): ReactElement {
 	const	[isOpen, set_isOpen] = useState(false);
-	const	{address, ens} = useWeb3();
+	const	[isOpenIdentity, set_isOpenIdentity] = useState(false);
+	const	{address} = useWeb3();
 
 	function renderEditButton(): ReactElement | null {
 		if (toAddress(address) === toAddress(props.address)) {
-			if (!ens) {
-				return (
-					<motion.div
-						className={'absolute top-4 flex w-full items-center justify-center'}
-						initial={'initial'}
-						animate={'enter'}
-						variants={{
-							initial: {opacity: 0, y: -100},
-							enter: {
-								opacity: 1,
-								y: 0,
-								transition: {delay: 1, duration: 0.4, ease: 'easeInOut'}
-							}
-						}}>
-						<Link
-							href={'https://app.ens.domains/'}
-							target={'_blank'}
-							rel={'noopener noreferrer'}>
-							<Button
-								variant={'reverted'}
-								className={'h-8 cursor-alias border-neutral-200 text-xs !font-bold opacity-40 shadow-md !transition-all hover:opacity-100'}>
-								{'You need an ENS to customize your profile'}
-							</Button>
-						</Link>
-					</motion.div>
-				);
-			}
 			return (
 				<motion.div
 					className={'absolute top-4 flex w-full items-center justify-center'}
@@ -479,12 +612,35 @@ function HeroSection(props: TReceiverProps): ReactElement {
 						onClick={(): void => set_isOpen(true)}
 						variant={'reverted'}
 						className={'h-8 border-neutral-200 text-xs !font-bold shadow-md'}>
-						{'Edit my ENS profile'}
+						{`Edit my ${props.identitySource === 'on-chain' ? 'ENS ': ''}profile`}
 					</Button>
 				</motion.div>
 			);
 		}
 		return null;
+	}
+
+	function renderIdentitySourceButton(): ReactElement {
+		const canEdit = toAddress(address) == toAddress(props.address);
+
+		if (props.identitySource === 'on-chain') {
+			return (
+				<div
+					onClick={(): void => canEdit ? set_isOpenIdentity(true) : undefined}
+					className={'group absolute right-4 top-2 flex cursor-pointer flex-row items-center space-x-1'}>
+					<div className={'h-2 w-2 rounded-full bg-[#16a34a] opacity-60'} />
+					<p className={'text-xxs text-neutral-400 group-hover:underline'}>{'OnChain'}</p>
+				</div>
+			);
+		}
+		return (
+			<div
+				onClick={(): void => canEdit ? set_isOpenIdentity(true) : undefined}
+				className={'group absolute right-4 top-2 flex cursor-pointer flex-row items-center space-x-1'}>
+				<div className={'h-2 w-2 rounded-full bg-neutral-300 opacity-60'} />
+				<p className={'text-xxs text-neutral-400 group-hover:underline'}>{'OffChain'}</p>
+			</div>
+		);
 	}
 
 	return (
@@ -494,15 +650,21 @@ function HeroSection(props: TReceiverProps): ReactElement {
 			<section className={'z-10 mx-auto grid w-full max-w-5xl'}>
 				<div className={'flex flex-col justify-center'}>
 					<div className={'box-0 relative grid grid-cols-1 gap-10 p-6 shadow md:grid-cols-12'}>
-						<AboutSection {...props} />
+						<ProfileSection {...props} />
 						<GoalSection />
+						{renderIdentitySourceButton()}
 					</div>
 				</div>
 			</section>
 			<EditProfileDialog
+				key={props.identitySource}
 				identity={props}
 				isOpen={isOpen}
 				set_isOpen={set_isOpen} />
+			<EditIdentitySourceDialog
+				identity={props}
+				isOpen={isOpenIdentity}
+				set_isOpen={set_isOpenIdentity} />
 		</div>
 	);
 }

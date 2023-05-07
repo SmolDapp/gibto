@@ -3,7 +3,9 @@ import Profile from 'components/views/Profile';
 import {isAddress} from 'ethers/lib/utils';
 import lensProtocol from 'utils/lens.tools';
 import axios from 'axios';
+import useSWR from 'swr';
 import {toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
+import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 
 import type {GetServerSideProps, GetServerSidePropsResult} from 'next';
@@ -11,7 +13,22 @@ import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
 
 function	Receiver(props: TReceiverProps): ReactElement {
-	return (<Profile key={props.address} {...props} />);
+	const {data, mutate} = useSWR<TReceiverProps>(
+		`${process.env.BASE_API_URI}/profile/${toAddress(props.address)}`,
+		baseFetcher, {
+			revalidateOnFocus: false,
+			revalidateOnReconnect: true,
+			refreshInterval: 0
+		}
+	);
+
+	const	profile = {...(data || props), name: props.name};
+	return (
+		<Profile
+			{...profile}
+			key={props.address}
+			mutate={mutate} />
+	);
 }
 
 export const getServerSideProps: GetServerSideProps = async (context): Promise<GetServerSidePropsResult<TReceiverProps>> => {
@@ -59,7 +76,6 @@ export const getServerSideProps: GetServerSideProps = async (context): Promise<G
 			}
 		}
 	}
-
 
 	if (!receiverAddress) {
 		return {notFound: true};

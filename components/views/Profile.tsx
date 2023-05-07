@@ -1,5 +1,6 @@
 import React from 'react';
 
+import AboutSection from './AboutSection';
 import DonationSection from './DonationSection';
 import HeroSection from './HeroSection';
 
@@ -11,14 +12,7 @@ function	Profile(props: TReceiverProps): ReactElement {
 		<>
 			<HeroSection {...props} />
 			<div className={'mx-auto mb-20 grid w-full max-w-5xl'}>
-				<div className={'mb-10'}>
-					<h2 className={'text-xl text-neutral-500'}>
-						{'About'}
-					</h2>
-					<div className={'mt-4 space-y-2 text-sm text-neutral-400'}>
-						{'No description provided.'}
-					</div>
-				</div>
+				<AboutSection {...props} />
 				<div className={'mb-72'}>
 					<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
 						{'Donate'}

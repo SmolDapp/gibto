@@ -20,6 +20,7 @@ export type TReceiverProps = {
 	ensHandle: string;
 	lensHandle: string;
 	description: string;
+	about: string;
 	avatar: string;
 	cover: string;
 	email: string;
@@ -31,4 +32,5 @@ export type TReceiverProps = {
 	discord: string;
 	isCreated: boolean;
 	isVerified: boolean;
-}
+	identitySource: 'on-chain' | 'off-chain';
+} & {mutate: () => void};
