@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react';
+import {useEffect, useMemo, useRef} from 'react';
 import Image from 'next/image';
 import jazzicon from '@metamask/jazzicon';
 
@@ -17,17 +17,27 @@ function Avatar({src, address}: {src: string, address: TAddress}): ReactElement 
 		}
 	}, [src, address]);
 
+	const	sanitizedSrc = useMemo((): string => {
+		if (src.startsWith('https://gateway.pinata.cloud/ipfs')) {
+			return src.replace('https://gateway.pinata.cloud/ipfs', 'https://ipfs.io/ipfs');
+		}
+		if (src.startsWith('ipfs://')) {
+			return src.replace('ipfs://', 'https://ipfs.io/ipfs/');
+		}
+		return src;
+	}, [src]);
+
 	return (
-		<div className={'mr-4 h-12 w-12 rounded-2xl bg-neutral-200'}>
+		<div className={'h-12 max-h-[48px] min-h-[48px] w-12 min-w-[48px] max-w-[48px] rounded-2xl bg-neutral-200'}>
 			{src === '' ? (
 				<div
 					ref={avatarRef}
 					className={'avatarJazz !h-12 !w-12 rounded-2xl object-cover'}>
 					<div />
 				</div>
-			) : videoExtTypes.includes(src.split('.').pop() || '') ? (
+			) : videoExtTypes.includes(sanitizedSrc.split('.').pop() || '') ? (
 				<video
-					src={src}
+					src={sanitizedSrc}
 					className={'!h-12 !w-12 rounded-2xl object-cover'}
 					autoPlay
 					loop
@@ -35,7 +45,7 @@ function Avatar({src, address}: {src: string, address: TAddress}): ReactElement 
 					playsInline />
 			) : (
 				<Image
-					src={src}
+					src={sanitizedSrc}
 					alt={''}
 					className={'!h-12 !w-12 rounded-2xl object-cover'}
 					width={400}

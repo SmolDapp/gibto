@@ -1,5 +1,4 @@
 import React, {Fragment, useState} from 'react';
-import Image from 'next/image';
 import Avatar from 'components/Avatar';
 import Cover from 'components/Cover';
 import IconCircleCross from 'components/icons/IconCircleCross';
@@ -244,13 +243,11 @@ function EditProfileDialog({identity, isOpen, set_isOpen}: {
 		return (
 			<fieldset className={'col-span-8 w-full space-y-4 text-xs md:text-sm'}>
 				<label aria-label={'avatar'} className={'flex w-full flex-row'}>
-					<Image
-						src={fields.avatar}
-						alt={''}
-						width={48}
-						height={48}
-						unoptimized
-						className={'mt-3 h-12 max-h-[48px] min-h-[48px] w-12 min-w-[48px] max-w-[48px] text-clip rounded-xl bg-neutral-50'} />
+					<div className={'mt-3'}>
+						<Avatar
+							address={toAddress(fields.address)}
+							src={fields.avatar} />
+					</div>
 					<div className={'ml-4 flex w-full flex-col justify-between'}>
 						<span className={'flex flex-row items-center justify-between'}>
 							<b className={'text-xxs font-semibold text-neutral-600'}>{'Avatar'}</b>
@@ -273,13 +270,11 @@ function EditProfileDialog({identity, isOpen, set_isOpen}: {
 				</label>
 
 				<label aria-label={'cover'} className={'flex w-full flex-row'}>
-					<Image
-						src={fields.cover}
-						alt={''}
-						width={48}
-						height={48}
-						unoptimized
-						className={'mt-3 h-12 max-h-[48px] min-h-[48px] w-12 min-w-[48px] max-w-[48px] rounded-xl'} />
+					<div className={'mt-3'}>
+						<Avatar
+							address={toAddress(fields.address)}
+							src={fields.cover || '/hero.jpg'} />
+					</div>
 					<div className={'ml-4 flex w-full flex-col justify-between'}>
 						<span className={'flex flex-row items-center justify-between'}>
 							<b className={'text-xxs font-semibold text-neutral-600'}>{'Cover'}</b>
@@ -545,7 +540,7 @@ function ProfileSection(props: TReceiverProps): ReactElement {
 
 	return (
 		<div className={'relative col-span-7 flex flex-col'}>
-			<div className={'-ml-2 flex flex-row items-center'}>
+			<div className={'-ml-2 flex flex-row items-center space-x-4'}>
 				<Avatar
 					address={toAddress(props.address)}
 					src={props.avatar} />
@@ -629,18 +624,18 @@ function HeroSection(props: TReceiverProps): ReactElement {
 			return (
 				<div
 					onClick={(): void => canEdit ? set_isOpenIdentity(true) : undefined}
-					className={'group absolute right-4 top-2 flex cursor-pointer flex-row items-center space-x-1'}>
+					className={`absolute right-4 top-2 flex flex-row items-center space-x-1 ${canEdit ? 'group cursor-pointer' : ''}`}>
 					<div className={'h-2 w-2 rounded-full bg-[#16a34a] opacity-60'} />
-					<p className={'text-xxs text-neutral-400 group-hover:underline'}>{'OnChain'}</p>
+					<p className={`text-xxs text-neutral-400 ${canEdit ? 'group-hover:underline' : ''}`}>{'OnChain'}</p>
 				</div>
 			);
 		}
 		return (
 			<div
 				onClick={(): void => canEdit ? set_isOpenIdentity(true) : undefined}
-				className={'group absolute right-4 top-2 flex cursor-pointer flex-row items-center space-x-1'}>
+				className={`absolute right-4 top-2 flex flex-row items-center space-x-1 ${canEdit ? 'group cursor-pointer' : ''}`}>
 				<div className={'h-2 w-2 rounded-full bg-neutral-300 opacity-60'} />
-				<p className={'text-xxs text-neutral-400 group-hover:underline'}>{'OffChain'}</p>
+				<p className={`text-xxs text-neutral-400 ${canEdit ? 'group-hover:underline' : ''}`}>{'OffChain'}</p>
 			</div>
 		);
 	}
