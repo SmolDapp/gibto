@@ -546,7 +546,9 @@ function ProfileSection(props: TReceiverProps): ReactElement {
 	return (
 		<div className={'relative col-span-7 flex flex-col'}>
 			<div className={'-ml-2 flex flex-row items-center'}>
-				<Avatar src={props.avatar} />
+				<Avatar
+					address={toAddress(props.address)}
+					src={props.avatar} />
 				<span>
 					<h1 className={'flex flex-row items-center text-3xl tracking-tight text-neutral-900 md:text-3xl'}>
 						{`Gib to ${props.name}`}

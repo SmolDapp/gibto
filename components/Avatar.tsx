@@ -1,16 +1,33 @@
+import {useEffect, useRef} from 'react';
 import Image from 'next/image';
+import jazzicon from '@metamask/jazzicon';
 
 import type {ReactElement} from 'react';
+import type {TAddress} from '@yearn-finance/web-lib/types';
 
-function Avatar({src}: {src: string}): ReactElement {
-	const	URL = 'https://images.unsplash.com/photo-1550165946-6c770414edb8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&q=80';
+function Avatar({src, address}: {src: string, address: TAddress}): ReactElement {
+	const	avatarRef = useRef<HTMLImageElement>(null);
 	const	videoExtTypes = ['mp4', 'webm', 'ogg'];
+
+	useEffect((): void => {
+		if (avatarRef.current) {
+			const addressAsNumber = parseInt(address.slice(2, 10), 16);
+			const el = jazzicon(48, addressAsNumber);
+			avatarRef.current.replaceChild(el, avatarRef.current.firstChild as Node);
+		}
+	}, [src, address]);
 
 	return (
 		<div className={'mr-4 h-12 w-12 rounded-2xl bg-neutral-200'}>
-			{videoExtTypes.includes((src || URL).split('.').pop() || '') ? (
+			{src === '' ? (
+				<div
+					ref={avatarRef}
+					className={'avatarJazz !h-12 !w-12 rounded-2xl object-cover'}>
+					<div />
+				</div>
+			) : videoExtTypes.includes(src.split('.').pop() || '') ? (
 				<video
-					src={(src || URL)}
+					src={src}
 					className={'!h-12 !w-12 rounded-2xl object-cover'}
 					autoPlay
 					loop
@@ -18,7 +35,7 @@ function Avatar({src}: {src: string}): ReactElement {
 					playsInline />
 			) : (
 				<Image
-					src={(src || URL)}
+					src={src}
 					alt={''}
 					className={'!h-12 !w-12 rounded-2xl object-cover'}
 					width={400}

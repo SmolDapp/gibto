@@ -439,3 +439,10 @@ details {
 		background: #1b2036
 	}
 }
+
+.avatarJazz > * {
+	@apply !h-12 !w-12 !rounded-2xl object-cover;
+}
+.avatarJazz svg {
+	@apply w-full h-full;
+}
