@@ -8,13 +8,15 @@ import {ethers} from 'ethers';
 import {handleInputChangeEventValue} from 'utils';
 import {sendEther} from 'utils/actions/sendEth';
 import {transfer} from 'utils/actions/transferERC20';
+import notify from 'utils/notifier';
 import cowswapTokenList from 'utils/tokenLists.json';
 import axios from 'axios';
 import {useMountEffect, useUpdateEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
+import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
-import {isZeroAddress, toAddress} from '@yearn-finance/web-lib/utils/address';
+import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS, WETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
 import {toNormalizedBN, Zero} from '@yearn-finance/web-lib/utils/format.bigNumber';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
@@ -118,7 +120,8 @@ function	AmountToSend({token, amountToSend, onChange}: {
 
 type TOnDonateCallback = (toRefresh?: TUseBalancesTokens) => Promise<void>;
 function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
-	const {address, provider, isActive} = useWeb3();
+	const {address, provider, isActive, ens, chainID} = useWeb3();
+	const chains = useChain();
 	const {safeChainID} = useChainID();
 	const {balances} = useWallet();
 	const [txStatus, set_txStatus] = useState(defaultTxStatus);
@@ -136,21 +139,32 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 	});
 
 	const onRegisterDonation = useCallback(async (txHash: string): Promise<void> => {
+		const	currentExplorer = chains.getCurrent()?.block_explorer;
 		try {
+			notify({
+				from: toAddress(address),
+				fromName: ens || truncateHex(toAddress(address), 4),
+				to: props.address,
+				toName: props.ensHandle || truncateHex(toAddress(props.address), 4),
+				amountNormalized: formatAmount(amountToSend.normalized, 0, 6),
+				value: formatAmount(amountToSend.value, 0, 2),
+				tokenName: tokenToSend.symbol,
+				txLink: `${currentExplorer}/tx/${txHash}`
+			});
 			await axios.post(`${process.env.BASE_API_URI}/give/${toAddress(props.address)}`, {
 				from: address,
 				to: props.address,
 				token: tokenToSend.address,
 				amount: amountToSend.raw.toString(),
 				txHash: txHash,
-				chainID: safeChainID,
+				chainID: chainID,
 				message: attachedMessage
 			});
 			props.mutate();
 		} catch (e) {
 			console.error(e);
 		}
-	}, [address, amountToSend.raw, attachedMessage, props, safeChainID, tokenToSend.address]);
+	}, [address, amountToSend.normalized, amountToSend.raw, amountToSend.value, attachedMessage, chains, ens, props, tokenToSend.address, tokenToSend.symbol, chainID]);
 
 	const onDonate = useCallback(async (): Promise<void> => {
 		if (toAddress(tokenToSend.address) === ETH_TOKEN_ADDRESS) {
