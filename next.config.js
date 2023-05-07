@@ -31,7 +31,7 @@ module.exports = (phase) => withTM(withPWA({
 		return [
 			{
 				source: '/github',
-				destination: 'https://github.com/SmolDapp/dumpservices',
+				destination: 'https://github.com/SmolDapp/gibto',
 				permanent: true
 			}
 		];
