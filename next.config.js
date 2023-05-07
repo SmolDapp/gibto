@@ -45,7 +45,7 @@ module.exports = (phase) => withTM(withPWA({
 		},
 		TELEGRAM_BOT: process.env.TELEGRAM_BOT,
 		TELEGRAM_CHAT: process.env.TELEGRAM_CHAT,
-		BASE_API_URI: 'http://localhost:8080'
-		// BASE_API_URI: 'https://api.gib.to'
+		// BASE_API_URI: 'http://localhost:8080'
+		BASE_API_URI: 'https://api.gib.to'
 	}
 }));
