@@ -44,11 +44,11 @@ function ModalIdentitySource({identity, isOpen, set_isOpen}: {
 			<Fragment>
 				<div className={'w-full md:w-5/6'}>
 					<b className={'text-base'}>{'Choose your Identity Source'}</b>
-					<p className={'pt-2 text-sm text-neutral-500'}>
+					<p className={'pt-2 text-xs text-neutral-500 md:text-sm'}>
 						{'By default if you have an ENS name, your identity will be onChain and when updating your profile, the changes will be stored on-chain as ENS records. However, you may want to change to an offChain source to avoid paying gas fees.'}
 					</p>
 				</div>
-				<div className={'flex w-full flex-row space-x-4 pt-10'}>
+				<div className={'flex w-full flex-col space-x-0 space-y-2 pt-10 md:flex-row md:space-x-4 md:space-y-0'}>
 					<Button
 						isBusy={isSaving}
 						onClick={async (): Promise<void> => onChangeIdentitySource('off-chain')}

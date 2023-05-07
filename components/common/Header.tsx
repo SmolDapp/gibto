@@ -192,8 +192,8 @@ function	AppHeader(): ReactElement {
 			<div className={'mx-auto max-w-5xl'}>
 				<header className={'yearn--header'}>
 					<Navbar currentPathName={pathname || ''} nav={nav} />
-					<div className={'flex w-1/3 md:hidden'}>
-						<Logo className={'mt-2 h-6 text-neutral-700'} />
+					<div className={'flex w-1/3 items-center justify-center md:hidden'}>
+						<Logo className={'h-6 text-neutral-700'} />
 						<Link href={`/${ens || address}`} className={'ml-2 text-sm text-neutral-400 transition-colors hover:text-neutral-900'}>
 							{'My profile'}
 						</Link>

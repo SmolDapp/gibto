@@ -139,7 +139,7 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 
 	function renderSocialFields(): ReactElement {
 		return (
-			<fieldset className={'col-span-4 flex w-full flex-col space-y-2 text-xs md:text-sm'}>
+			<fieldset className={'col-span-12 flex w-full flex-col space-y-2 text-xs md:col-span-4 md:text-sm'}>
 				<span>
 					<b className={'text-xxs font-semibold text-neutral-600'}>{'Social'}</b>
 				</span>
@@ -217,7 +217,7 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 							onChange={(e): void => set_fields({...fields, telegram: e.target.value})} />
 					</div>
 				</label>
-				<div className={'w-full pt-2'}>
+				<div className={'sticky inset-x-0 bottom-0 w-full pt-2 md:relative'}>
 					<Button
 						className={'w-full'}
 						isDisabled={!txStatus.none}
@@ -231,7 +231,7 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 
 	function renderInfoFields(): ReactElement {
 		return (
-			<fieldset className={'col-span-8 w-full space-y-4 text-xs md:text-sm'}>
+			<fieldset className={'col-span-12 w-full space-y-4 text-xs md:col-span-8 md:text-sm'}>
 				<label aria-label={'avatar'} className={'flex w-full flex-row'}>
 					<div className={'mt-3'}>
 						<Avatar
@@ -296,8 +296,7 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 						name={'description'}
 						id={'description'}
 						placeholder={'smoldapp'}
-						className={'resize-none rounded-md border border-neutral-200 p-2 focus:border-neutral-400 focus:outline-none'}
-						rows={5}
+						className={'h-24 resize-none rounded-md border border-neutral-200 p-2 focus:border-neutral-400 focus:outline-none md:h-36'}
 						value={fields.description}
 						onChange={(e): void => set_fields({...fields, description: e.target.value})} />
 				</label>
@@ -312,7 +311,7 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 					e.preventDefault();
 					await onSubmitRecords();
 				}}
-				className={'mt-6 grid grid-cols-12 gap-x-10 gap-y-4'}>
+				className={'relative mt-6 grid grid-cols-12 gap-x-0 gap-y-4 md:gap-x-10'}>
 				{renderInfoFields()}
 				{renderSocialFields()}
 			</form>
@@ -321,13 +320,13 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 
 	return (
 		<Modal
-			className={'max-w-5xl'}
+			className={'max-h-[80vh] max-w-sm overflow-x-hidden overflow-y-scroll md:max-h-[unset] md:max-w-5xl'}
 			isOpen={isOpen}
 			set_isOpen={(): void => set_isOpen(false)}>
 			<Fragment>
 				<div className={'w-full md:w-3/4'}>
 					<b className={'text-base'}>{'Update your profile'}</b>
-					<p className={'pt-2 text-sm text-neutral-500'}>
+					<p className={'pt-2 text-xs text-neutral-500 md:text-sm'}>
 						{'You are in control of your profile. You can update your name, avatar, and social media links. All of theses changes will be stored on-chain as ENS records. Unleash your digital identity!'}
 					</p>
 				</div>

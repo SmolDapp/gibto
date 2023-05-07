@@ -1,6 +1,9 @@
 import React from 'react';
 import {ImageWithFallback} from 'components/common/ImageWithFallback';
 import IconChevronBoth from 'components/icons/IconChevronBoth';
+import IconCircleCross from 'components/icons/IconCircleCross';
+import IconSpinner from 'components/icons/IconSpinner';
+import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import IconLinkOut from '@yearn-finance/web-lib/icons/IconLinkOut';
@@ -11,17 +14,45 @@ import {formatDuration} from '@yearn-finance/web-lib/utils/format.time';
 import type {ReactElement} from 'react';
 import type {TDonationsProps} from 'utils/types';
 
-function	SectionDonationHistory({donateHistory}: {donateHistory: TDonationsProps[]}): ReactElement {
+function	SectionDonationHistory({donateHistory, isLoading, name}: {
+	name: string,
+	donateHistory: TDonationsProps[],
+	isLoading: boolean,
+}): ReactElement {
 	const chains = useChain();
 	const {address} = useWeb3();
 
+	if (isLoading && donateHistory.length === 0) {
+		return (
+			<section className={'box-100 mb-2 flex h-40 w-full items-center justify-center space-x-2 pt-6 text-sm text-neutral-400'}>
+				<IconSpinner />
+				<p>
+					{'Loading history...'}
+				</p>
+			</section>
+		);
+	} if (!isLoading && donateHistory.length === 0) {
+		return (
+			<section className={'box-100 mb-2 flex h-52 w-full flex-col items-center justify-center space-y-6 pt-6 text-sm text-neutral-400'}>
+				<div className={'flex items-center justify-center space-x-2'}>
+					<IconCircleCross className={'h-4 w-4 text-neutral-400'} />
+					<p>{`No gib for ${name}`}</p>
+				</div>
+				<a href={'#donate'}>
+					<Button className={'!h-8 min-w-[160px]'} variant={'filled'}>
+						{'Gib now'}
+					</Button>
+				</a>
+			</section>
+		);
+	}
 	return (
 		<section>
 			{donateHistory?.map((donation): ReactElement => (
 				<details
 					key={donation.UUID}
 					className={'mb-2 w-full rounded border border-neutral-200'}>
-					<summary className={'grid px-4 py-2 md:grid-cols-9 md:px-6'}>
+					<summary className={'relative grid px-4 py-2 md:grid-cols-9 md:px-6'}>
 						<div className={'yearn--table-token-section'}>
 							<div className={'yearn--table-token-section-item'}>
 								<div className={'yearn--table-token-section-item-image'}>
@@ -60,10 +91,8 @@ function	SectionDonationHistory({donateHistory}: {donateHistory: TDonationsProps
 								</b>
 							</div>
 
-							<div className={'yearn--table-data-section-item md:col-span-3'}>
-								<p className={'yearn--table-data-section-item-label'}>{'Tx'}</p>
-								<div
-									className={'font-number flex h-full flex-row items-center justify-end pt-2'}>
+							<div className={'yearn--table-data-section-item absolute right-4 top-2 md:relative md:col-span-3'}>
+								<div className={'font-number mt-2 flex h-full flex-row items-center justify-end md:-mt-2'}>
 									<p className={'text-xs text-neutral-400'}>
 										{formatDuration((donation.time * 1000) - new Date().valueOf(), true)}
 									</p>
@@ -71,11 +100,11 @@ function	SectionDonationHistory({donateHistory}: {donateHistory: TDonationsProps
 										href={`${chains.get(donation.chainID)?.block_explorer || 'https://etherscan.io'}/tx/${donation.txHash}`}
 										target={'_blank'}
 										rel={'noreferrer'}
-										className={'text-neutral-400 transition-colors hover:text-neutral-900'}>
+										className={'mx-2 text-neutral-400 transition-colors hover:text-neutral-900 md:mx-0'}>
 										<IconLinkOut className={'h-4 w-4 md:ml-4'} />
 									</a>
 									<IconChevronBoth
-										className={`-mr-2 h-4 w-4 text-neutral-400 transition-colors hover:text-neutral-900 md:ml-4 ${donation.message ? '' : 'pointer-events-none opacity-0'}`} />
+										className={`-mr-2 h-4 w-4 text-neutral-400 transition-colors hover:text-neutral-900 md:ml-4 ${donation.message ? '' : 'pointer-events-none hidden opacity-0 md:flex'}`} />
 								</div>
 							</div>
 						</div>

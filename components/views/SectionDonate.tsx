@@ -233,8 +233,8 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 	}, [onRefreshPrice]);
 
 	return (
-		<div className={'grid grid-cols-3 gap-4'}>
-			<div className={'relative grid grid-cols-1 gap-2 md:grid-cols-1'}>
+		<div className={'grid grid-cols-1 gap-4 md:grid-cols-3'}>
+			<div className={'relative grid grid-cols-4 gap-2 md:grid-cols-1'}>
 				<CardWithIcon
 					isSelected={Number(formatAmount(amountToSend.value, 2, 2)) === 10}
 					icon={(
@@ -286,9 +286,8 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 						document.getElementById('amountToSend')?.focus();
 						onComputeAmountFromValue(69);
 					}} />
-
 			</div>
-			<div className={'box-100 col-span-2 flex h-full flex-col p-4 pb-2'}>
+			<div className={'box-100 col-span-1 flex h-full flex-col p-4 pb-2 md:col-span-2'}>
 				<div className={'font-number w-full space-y-4 rounded-lg bg-neutral-100 text-xs md:text-sm'}>
 					<span className={'flex flex-col justify-between'}>
 						<b className={'pb-2'}>{'Token:'}</b>
@@ -297,7 +296,7 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 							onChange={set_tokenToSend} />
 					</span>
 				</div>
-				<div className={'flex h-full flex-col items-center justify-center py-20'}>
+				<div className={'flex h-full flex-col items-center justify-center py-10 md:py-20'}>
 					<AmountToSend
 						token={tokenToSend}
 						amountToSend={amountToSend}

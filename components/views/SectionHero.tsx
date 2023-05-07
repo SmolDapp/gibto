@@ -11,7 +11,7 @@ import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import IconSocialDiscord from '@yearn-finance/web-lib/icons/IconSocialDiscord';
 import IconSocialGithub from '@yearn-finance/web-lib/icons/IconSocialGithub';
 import IconSocialTwitter from '@yearn-finance/web-lib/icons/IconSocialTwitter';
-import {toAddress} from '@yearn-finance/web-lib/utils/address';
+import {toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 
 import ModalEditProfile from './ModalEditProfile';
 import ModalIdentitySource from './ModalIdentitySource';
@@ -19,9 +19,40 @@ import ModalIdentitySource from './ModalIdentitySource';
 import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
 
+function SocialSection(props: TReceiverProps): ReactElement {
+	return (
+		<Fragment>
+			<SocialMediaCard
+				href={`https://twitter.com/${props.twitter}`}
+				className={props.twitter ? '' : 'pointer-events-none opacity-40'}
+				icon={<IconSocialTwitter />} />
+			<SocialMediaCard
+				href={`https://github.com/${props.github}`}
+				className={props.github ? '' : 'pointer-events-none opacity-40'}
+				icon={<IconSocialGithub />} />
+			<SocialMediaCard
+				href={`https://discord.gg/${props.discord}`}
+				className={props.discord ? '' : 'pointer-events-none opacity-40'}
+				icon={<IconSocialDiscord />} />
+			<SocialMediaCard
+				href={`https://reddit.com/${props.reddit}`}
+				className={props.reddit ? '' : 'pointer-events-none opacity-40'}
+				icon={<IconSocialReddit />} />
+			<SocialMediaCard
+				href={`https://t.me/${props.telegram}`}
+				className={props.telegram ? '' : 'pointer-events-none opacity-40'}
+				icon={<IconSocialTelegram />} />
+			<SocialMediaCard
+				href={`https://${props.website}`}
+				className={props.website ? '' : 'pointer-events-none opacity-40'}
+				icon={<IconSocialWebsite />} />
+		</Fragment>
+	);
+}
+
 function GoalSection(): ReactElement {
 	return (
-		<div className={'font-number col-span-5 flex w-full flex-col overflow-hidden border-l border-neutral-200 pl-10 text-xs md:text-sm'}>
+		<div className={'font-number col-span-7 flex w-full flex-col overflow-hidden border-l-0 border-neutral-200 pl-0 text-xs md:col-span-5 md:border-l md:pl-10 md:text-sm'}>
 			<div className={'relative flex h-full w-full flex-col items-center justify-center space-y-4'}>
 				<svg
 					xmlns={'http://www.w3.org/2000/svg'}
@@ -75,46 +106,26 @@ function ProfileSection(props: TReceiverProps): ReactElement {
 
 	return (
 		<div className={'relative col-span-7 flex flex-col'}>
-			<div className={'-ml-2 flex flex-row items-center space-x-4'}>
+			<div className={'ml-0 mt-2 flex flex-row items-center space-x-2 md:-ml-2 md:mt-0 md:space-x-4'}>
 				<Avatar
 					address={toAddress(props.address)}
 					src={props.avatar} />
 				<span>
-					<h1 className={'flex flex-row items-center text-3xl tracking-tight text-neutral-900 md:text-3xl'}>
+					<h1 className={'flex flex-row items-center text-xl tracking-tight text-neutral-900 md:text-3xl'}>
 						{`Gib to ${props.name}`}
 						{renderCheck()}
 					</h1>
-					<p className={'font-number text-xs font-normal tracking-normal text-neutral-400'}>{props.address}</p>
+					<p className={'font-number text-xxs font-normal tracking-normal text-neutral-400 md:text-xs'}>
+						<span className={'hidden md:inline'}>{props.address}</span>
+						<span className={'inline pl-1 md:hidden'}>{truncateHex(props.address, 8)}</span>
+					</p>
 				</span>
 			</div>
-			<p className={'mt-4 min-h-[60px] text-neutral-500'}>
+			<p className={'mt-2 min-h-[30px] text-sm text-neutral-500 md:mt-4 md:min-h-[60px] md:text-base'}>
 				{props?.description || 'No description'}
 			</p>
-			<div className={'mt-auto flex flex-row space-x-4 pt-6'}>
-				<SocialMediaCard
-					href={`https://twitter.com/${props.twitter}`}
-					className={props.twitter ? '' : 'pointer-events-none opacity-40'}
-					icon={<IconSocialTwitter />} />
-				<SocialMediaCard
-					href={`https://github.com/${props.github}`}
-					className={props.github ? '' : 'pointer-events-none opacity-40'}
-					icon={<IconSocialGithub />} />
-				<SocialMediaCard
-					href={`https://discord.gg/${props.discord}`}
-					className={props.discord ? '' : 'pointer-events-none opacity-40'}
-					icon={<IconSocialDiscord />} />
-				<SocialMediaCard
-					href={`https://reddit.com/${props.reddit}`}
-					className={props.reddit ? '' : 'pointer-events-none opacity-40'}
-					icon={<IconSocialReddit />} />
-				<SocialMediaCard
-					href={`https://t.me/${props.telegram}`}
-					className={props.telegram ? '' : 'pointer-events-none opacity-40'}
-					icon={<IconSocialTelegram />} />
-				<SocialMediaCard
-					href={`https://${props.website}`}
-					className={props.website ? '' : 'pointer-events-none opacity-40'}
-					icon={<IconSocialWebsite />} />
+			<div className={'mt-auto hidden flex-row space-x-4 pt-6 md:flex'}>
+				<SocialSection {...props} />
 			</div>
 		</div>
 	);
@@ -184,6 +195,9 @@ function SectionHero(props: TReceiverProps): ReactElement {
 					<div className={'box-0 relative grid grid-cols-1 gap-10 p-6 shadow md:grid-cols-12'}>
 						<ProfileSection {...props} />
 						<GoalSection />
+						<div className={'col-span-7 mt-auto flex w-full justify-between pt-2 md:hidden'}>
+							<SocialSection {...props} />
+						</div>
 						{renderIdentitySourceButton()}
 					</div>
 				</div>

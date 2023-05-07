@@ -36,8 +36,8 @@ function Cover({src}: {src: string}): ReactElement {
 					src={sanitizedSrc}
 					alt={''}
 					className={'absolute inset-0 h-full w-full object-cover'}
-					width={1920}
-					height={1080}
+					width={1500}
+					height={500}
 					unoptimized />
 			)}
 		</div>

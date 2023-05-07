@@ -18,7 +18,7 @@ function	Profile(props: TReceiverProps): ReactElement {
 	const {balances, refresh} = useWallet();
 	const limit = 25;
 	const [currentPage, set_currentPage] = useState<number>(1);
-	const {data: donateHistory, mutate} = useSWR<TDonationsProps[]>(
+	const {data: donateHistory, isLoading, mutate} = useSWR<TDonationsProps[]>(
 		`${process.env.BASE_API_URI}/gives/${toAddress(props.address)}?page=${currentPage}`,
 		baseFetcher, {
 			revalidateOnFocus: false,
@@ -90,7 +90,10 @@ function	Profile(props: TReceiverProps): ReactElement {
 							</button>
 						</div>
 					</div>
-					<SectionDonationHistory donateHistory={donateHistory || []} />
+					<SectionDonationHistory
+						name={props.name}
+						isLoading={isLoading}
+						donateHistory={donateHistory || []} />
 				</div>
 			</div>
 		</>

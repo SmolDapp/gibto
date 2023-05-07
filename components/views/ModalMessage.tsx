@@ -17,13 +17,13 @@ function ModalMessage({isOpen, set_isOpen, message, onConfirm, onCancel}: {
 			<Fragment>
 				<div className={'w-full md:w-5/6'}>
 					<b className={'text-base'}>{'Wanna attach a message?'}</b>
-					<p className={'pt-2 text-sm text-neutral-500'}>
+					<p className={'pt-2 text-xs text-neutral-500 md:text-sm'}>
 						{'You can attach a kind message to your donation. This message will not be stored onChain and will be visible by everyone!'}
 					</p>
 				</div>
 				<div className={'flex w-full flex-col space-y-4 pt-6'}>
 					<textarea
-						className={'h-32 resize-none rounded-md border border-neutral-200 p-2 focus:border-neutral-400 focus:outline-none'}
+						className={'h-24 resize-none rounded-md border border-neutral-200 p-2 focus:border-neutral-400 focus:outline-none md:h-32'}
 						placeholder={'Your message'}
 						value={value}
 						onChange={(e): void => set_value(e.target.value)} />

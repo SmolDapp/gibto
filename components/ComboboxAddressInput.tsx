@@ -2,7 +2,7 @@ import React, {Fragment, useState} from 'react';
 import Image from 'next/image';
 import IconCheck from 'components/icons/IconCheck';
 import IconChevronBoth from 'components/icons/IconChevronBoth';
-import useWallet from 'contexts/useWallet';
+import {useWallet} from 'contexts/useWallet';
 import {Contract} from 'ethcall';
 import {isAddress} from 'ethers/lib/utils';
 import {Combobox, Transition} from '@headlessui/react';
@@ -10,7 +10,7 @@ import {useAsync, useThrottledState, useUpdateEffect} from '@react-hookz/web';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import ERC20_ABI from '@yearn-finance/web-lib/utils/abi/erc20.abi';
-import {toAddress} from '@yearn-finance/web-lib/utils/address';
+import {toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 import {getProvider, newEthCallProvider} from '@yearn-finance/web-lib/utils/web3/providers';
@@ -51,7 +51,12 @@ function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
 							{`${option.symbol}`}
 							<small className={'text-xs text-neutral-600'}>{` - ${formatAmount(balances?.[toAddress(option.address)]?.normalized || 0, 2, 6)} available`}</small>
 						</span>
-						<small className={'font-number text-xs text-neutral-500'}>{toAddress(option.address)}</small>
+						<small className={'font-number hidden text-xs text-neutral-500 md:flex'}>
+							{toAddress(option.address)}
+						</small>
+						<small className={'font-number flex text-xs text-neutral-500 md:hidden'}>
+							{truncateHex(toAddress(option.address), 6)}
+						</small>
 					</div>
 					{isSelected ? (
 						<span
