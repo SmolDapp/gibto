@@ -1,92 +1,18 @@
 import React, {useCallback, useState} from 'react';
-import {ImageWithFallback} from 'components/common/ImageWithFallback';
-import useWallet from 'contexts/useWallet';
+import {useWallet} from 'contexts/useWallet';
 import useSWR from 'swr';
-import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
-import IconLinkOut from '@yearn-finance/web-lib/icons/IconLinkOut';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
 import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
-import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
-import {formatDuration} from '@yearn-finance/web-lib/utils/format.time';
 
-import AboutSection from './AboutSection';
-import DonationSection from './DonationSection';
-import HeroSection from './HeroSection';
+import SectionAbout from './SectionAbout';
+import SectionDonate from './SectionDonate';
+import SectionDonationHistory from './SectionDonationHistory';
+import SectionHero from './SectionHero';
 
 import type {TUseBalancesTokens} from 'hooks/useBalances';
 import type {ReactElement} from 'react';
 import type {TDonationsProps, TReceiverProps} from 'utils/types';
-
-function	DonationHistory({donateHistory}: {donateHistory: TDonationsProps[]}): ReactElement {
-	const chains = useChain();
-
-	return (
-		<section>
-			{donateHistory?.map((donation): ReactElement => (
-				<div key={donation.UUID} className={'yearn--table-wrapper mb-2'}>
-					<div className={'yearn--table-token-section'}>
-						<div className={'yearn--table-token-section-item'}>
-							<div className={'yearn--table-token-section-item-image'}>
-								<ImageWithFallback
-									key={`${donation.UUID}_${donation.token}`}
-									alt={''}
-									width={40}
-									height={40}
-									quality={90}
-									src={`https://assets.smold.app/api/token/${donation.chainID}/${donation.token}/logo-128.png`}
-									loading={'eager'} />
-							</div>
-							<div className={'flex flex-col'}>
-								<p>
-									{formatAmount(donation.amount, 0, 4)}
-									<span className={'text-sm text-neutral-400'}>{` ${donation.tokenName}`}</span>
-								</p>
-								<small className={'font-number text-xs text-neutral-400'}>
-									{`$${formatAmount(donation.value, 0, 2)}`}
-								</small>
-							</div>
-						</div>
-					</div>
-
-					<div className={'yearn--table-data-section md:grid-cols-9'}>
-						<div className={'yearn--table-data-section-item md:col-span-7'}>
-							<p className={'text-start text-xs leading-5 text-neutral-400'}>{'From'}</p>
-							<a
-								href={`${chains.get(donation.chainID)?.block_explorer || 'https://etherscan.io'}/address/${donation.txHash}`}
-								target={'_blank'}
-								rel={'noreferrer'}
-								className={'hover:underline'}>
-								<b className={'yearn--table-data-section-item-value font-number'}>
-									{donation.from}
-								</b>
-							</a>
-						</div>
-
-						<div className={'yearn--table-data-section-item md:col-span-2'}>
-							<p className={'yearn--table-data-section-item-label'}>{'Hash'}</p>
-							<div
-								className={'font-number flex h-full flex-row items-center justify-end pt-2'}>
-								<p className={'text-xs text-neutral-400'}>
-									{formatDuration((donation.time * 1000) - new Date().valueOf(), true)}
-								</p>
-								<a
-									href={`${chains.get(donation.chainID)?.block_explorer || 'https://etherscan.io'}/tx/${donation.txHash}`}
-									target={'_blank'}
-									rel={'noreferrer'}
-									className={'text-neutral-400 transition-colors hover:text-neutral-900'}>
-									<IconLinkOut className={'h-4 w-4 md:ml-4'} />
-								</a>
-							</div>
-						</div>
-
-					</div>
-				</div>
-			))}
-
-		</section>
-	);
-}
 
 function	Profile(props: TReceiverProps): ReactElement {
 	const {balances, refresh} = useWallet();
@@ -125,14 +51,14 @@ function	Profile(props: TReceiverProps): ReactElement {
 
 	return (
 		<>
-			<HeroSection {...props} />
+			<SectionHero {...props} />
 			<div className={'mx-auto mb-20 grid w-full max-w-5xl'}>
-				<AboutSection {...props} />
+				<SectionAbout {...props} />
 				<div className={'mb-20'}>
 					<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
 						{'Donate'}
 					</h2>
-					<DonationSection
+					<SectionDonate
 						onDonateCallback={onDonateCallback}
 						{...props} />
 				</div>
@@ -164,7 +90,7 @@ function	Profile(props: TReceiverProps): ReactElement {
 							</button>
 						</div>
 					</div>
-					<DonationHistory donateHistory={donateHistory || []} />
+					<SectionDonationHistory donateHistory={donateHistory || []} />
 				</div>
 			</div>
 		</>

@@ -9,7 +9,7 @@ import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
 
-function	AboutSection(props: TReceiverProps): ReactElement {
+function	SectionAbout(props: TReceiverProps): ReactElement {
 	const	{provider, address} = useWeb3();
 	const	isOwner = toAddress(props.address) === toAddress(address);
 	const	aboutRef = useRef<HTMLDivElement>(null);
@@ -100,4 +100,4 @@ function	AboutSection(props: TReceiverProps): ReactElement {
 	);
 }
 
-export default AboutSection;
+export default SectionAbout;

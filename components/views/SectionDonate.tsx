@@ -1,6 +1,8 @@
 import {useCallback, useEffect, useState} from 'react';
 import CardWithIcon from 'components/CardWithIcon';
 import ComboboxAddressInput from 'components/ComboboxAddressInput';
+import IconMessage from 'components/icons/IconMessage';
+import IconMessageCheck from 'components/icons/IconMessageCheck';
 import {useWallet} from 'contexts/useWallet';
 import {ethers} from 'ethers';
 import {handleInputChangeEventValue} from 'utils';
@@ -17,6 +19,8 @@ import {ETH_TOKEN_ADDRESS, WETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/util
 import {toNormalizedBN, Zero} from '@yearn-finance/web-lib/utils/format.bigNumber';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
+
+import ModalMessage from './ModalMessage';
 
 import type {TTokenInfo, TTokenList} from 'contexts/useTokenList';
 import type {TUseBalancesTokens} from 'hooks/useBalances';
@@ -113,12 +117,14 @@ function	AmountToSend({token, amountToSend, onChange}: {
 }
 
 type TOnDonateCallback = (toRefresh?: TUseBalancesTokens) => Promise<void>;
-function	DonationSection(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
+function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
 	const {address, provider, isActive} = useWeb3();
 	const {safeChainID} = useChainID();
 	const {balances} = useWallet();
 	const [txStatus, set_txStatus] = useState(defaultTxStatus);
 	const [price, set_price] = useState<TNDict<TDict<number>>>({});
+	const [isModalOpen, set_isModalOpen] = useState<boolean>(false);
+	const [attachedMessage, set_attachedMessage] = useState<string>('');
 	const [amountToSend, set_amountToSend] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0), value: 0});
 	const [tokenToSend, set_tokenToSend] = useState<TTokenInfo>({
 		address: ETH_TOKEN_ADDRESS,
@@ -137,13 +143,14 @@ function	DonationSection(props: TReceiverProps & {onDonateCallback: TOnDonateCal
 				token: tokenToSend.address,
 				amount: amountToSend.raw.toString(),
 				txHash: txHash,
-				chainID: safeChainID
+				chainID: safeChainID,
+				message: attachedMessage
 			});
 			props.mutate();
 		} catch (e) {
 			console.error(e);
 		}
-	}, [address, amountToSend.raw, props, safeChainID, tokenToSend.address]);
+	}, [address, amountToSend.raw, attachedMessage, props, safeChainID, tokenToSend.address]);
 
 	const onDonate = useCallback(async (): Promise<void> => {
 		if (toAddress(tokenToSend.address) === ETH_TOKEN_ADDRESS) {
@@ -156,6 +163,7 @@ function	DonationSection(props: TReceiverProps & {onDonateCallback: TOnDonateCal
 					await onRegisterDonation(receipt.transactionHash);
 				}
 				await props.onDonateCallback();
+				set_amountToSend({...toNormalizedBN(0), value: 0});
 			}).perform();
 		} else {
 			new Transaction(provider, transfer, set_txStatus).populate(
@@ -173,6 +181,7 @@ function	DonationSection(props: TReceiverProps & {onDonateCallback: TOnDonateCal
 					symbol: tokenToSend.symbol,
 					name: tokenToSend.name
 				});
+				set_amountToSend({...toNormalizedBN(0), value: 0});
 			}).perform();
 		}
 	}, [amountToSend.raw, balances, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
@@ -298,17 +307,25 @@ function	DonationSection(props: TReceiverProps & {onDonateCallback: TOnDonateCal
 					</p>
 				</div>
 				<div>
-					<Button
-						className={'w-full'}
-						isBusy={txStatus.pending}
-						isDisabled={
-							!isActive ||
-							(amountToSend?.raw || Zero)?.isZero() ||
-							(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero)
-						}
-						onClick={onDonate}>
-						{'Donate'}
-					</Button>
+					<div className={'flex flex-row space-x-2'}>
+						<Button
+							className={'w-full'}
+							isBusy={txStatus.pending}
+							isDisabled={
+								!isActive ||
+								(amountToSend?.raw || Zero)?.isZero() ||
+								(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero)
+							}
+							onClick={onDonate}>
+							{'Donate'}
+						</Button>
+						<Button
+							variant={'light'}
+							className={attachedMessage === '' ? '' : '!text-[#22c55e]'}
+							onClick={(): void => set_isModalOpen(true)}>
+							{attachedMessage === '' ? <IconMessage className={'h-5 w-5 '} /> : <IconMessageCheck className={'h-5 w-5 '} />}
+						</Button>
+					</div>
 					<div className={'font-number w-full pt-1 text-center text-xxs text-neutral-400'}>
 						<button
 							suppressHydrationWarning
@@ -318,8 +335,20 @@ function	DonationSection(props: TReceiverProps & {onDonateCallback: TOnDonateCal
 					</div>
 				</div>
 			</div>
+			<ModalMessage
+				isOpen={isModalOpen}
+				set_isOpen={set_isModalOpen}
+				message={attachedMessage}
+				onCancel={(): void => {
+					set_isModalOpen(false);
+					set_attachedMessage('');
+				}}
+				onConfirm={(message: string): void => {
+					set_isModalOpen(false);
+					set_attachedMessage(message);
+				}} />
 		</div>
 	);
 }
 
-export default DonationSection;
+export default SectionDonate;

@@ -40,12 +40,14 @@ export type TDonationsProps = {
 	from: string
 	to: string
 	token: string
+	fromENS: string
 	tokenName: string
 	amountRaw: string
+	txHash: string
+	message: string
 	amount: number
 	value: number
 	pricePerToken: number
-	txHash: string
 	chainID: number
 	decimals: number
 	time: number

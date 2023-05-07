@@ -126,9 +126,9 @@ label[aria-invalid="true"] {
 		&:not(:disabled):not([aria-busy="true"]):hover {@apply bg-neutral-800;}
 	}
 	&[data-variant="light"] {
-		@apply text-neutral-900 bg-neutral-100 border border-transparent;
+		@apply text-neutral-600 bg-neutral-0 border border-neutral-200;
 		&:disabled {@apply opacity-40;}
-		&:not(:disabled):not([aria-busy="true"]):hover {@apply bg-neutral-200;}
+		&:not(:disabled):not([aria-busy="true"]):hover {@apply bg-neutral-900 text-neutral-0;}
 	}
 	&[data-variant="outlined"] {
 		@apply text-neutral-900 bg-transparent border border-neutral-900;
