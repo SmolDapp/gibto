@@ -74,7 +74,7 @@ function	Meta(): ReactElement {
 					href={'/favicons/apple-icon-167x167.png'} />
 				<script
 					defer
-					data-domain={'dump.services'}
+					data-domain={'gib.to'}
 					src={'/js/script.js'} />
 				<meta name={'robots'} content={'index,nofollow'} />
 				<meta name={'googlebot'} content={'index,nofollow'} />
