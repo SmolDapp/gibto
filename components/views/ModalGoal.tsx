@@ -21,6 +21,7 @@ function ModalGoal({mutate, isOpen, set_isOpen}: {
 	const [goalValue, set_goalValue] = useState(0);
 	const [isSaving, set_isSaving] = useState(false);
 
+	console.log({startDate, endDate, goalValue});
 	const onSubmitForm = useCallback(async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
 		set_isSaving(true);
@@ -67,8 +68,7 @@ function ModalGoal({mutate, isOpen, set_isOpen}: {
 						</i>
 						<GoalPreviewMin
 							received={goalValue / 2}
-							value={goalValue}
-						/>
+							value={goalValue} />
 					</div>
 					<div>
 						<div
