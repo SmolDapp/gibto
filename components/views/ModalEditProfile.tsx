@@ -320,7 +320,7 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 
 	return (
 		<Modal
-			className={'max-h-[80vh] max-w-sm overflow-x-hidden overflow-y-scroll md:max-h-[unset] md:max-w-5xl'}
+			className={'max-h-[80vh] max-w-sm overflow-x-hidden overflow-y-scroll md:max-h-[unset] md:max-w-5xl md:!p-0'}
 			isOpen={isOpen}
 			set_isOpen={(): void => set_isOpen(false)}>
 			<Fragment>

@@ -81,7 +81,7 @@ export const getServerSideProps: GetServerSideProps = async (context): Promise<G
 		return {notFound: true};
 	}
 
-	const	{data: creator} = await axios.get(`${process.env.BASE_API_URI}/profile/${toAddress(receiverAddress)}`);
+	const	{data: creator} = await axios.get(`${process.env.BASE_API_URI}/quickprofile/${toAddress(receiverAddress)}`);
 	creator.name = receiverName;
 	return {props: creator};
 };

@@ -1,7 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import IconEdit from 'components/icons/IconEdit';
 import axios from 'axios';
-import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
@@ -40,6 +39,9 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 	}
 
 	async function onSaveAbout(): Promise<void> {
+		if (isSaving) {
+			return;
+		}
 		set_isSaving(true);
 		try {
 			const signer = await provider.getSigner();
@@ -69,24 +71,23 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 	}, [aboutRef]);
 
 	return (
-		<div className={'mb-10'}>
+		<div className={'mb-20'}>
 			<div className={'flex flex-row items-center justify-between'}>
-				<h2 className={'text-xl text-neutral-500'}>
-					{'About'}
-					<span>
-						{isOwner && (
-							<IconEdit
-								onClick={onTryToFocus}
-								className={'ml-2 inline-block h-4 w-4 cursor-pointer text-neutral-300 transition-colors hover:text-neutral-900'} />
-						)}
-					</span>
+				<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
+					{'Donate'}
 				</h2>
-				<Button
-					onClick={onSaveAbout}
-					isBusy={isSaving}
-					className={`!h-8 text-sm transition-opacity duration-300 ${(isOwner && props.about !== contentValue) ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
-					{'Save'}
-				</Button>
+				<div className={'flex flex-row items-center justify-center space-x-4'}>
+					<button
+						type={'button'}
+						onClick={onSaveAbout}
+						className={`text-xs text-neutral-600 underline transition-opacity duration-300 hover:text-neutral-900 ${(isOwner && props.about !== contentValue) ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+						{'Save changes'}
+					</button>
+					<button onClick={onTryToFocus}>
+						<IconEdit
+							className={'transition-color h-4 w-4 text-neutral-400 hover:text-neutral-900'} />
+					</button>
+				</div>
 			</div>
 			<div
 				ref={aboutRef}

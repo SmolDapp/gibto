@@ -15,6 +15,8 @@ import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 import {getProvider, newEthCallProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 
+import {ImageWithFallback} from './common/ImageWithFallback';
+
 import type {TTokenInfo} from 'contexts/useTokenList';
 import type {BigNumber, providers} from 'ethers';
 import type {Dispatch, ReactElement, SetStateAction} from 'react';
@@ -71,11 +73,11 @@ function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
 }
 
 function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAddPossibleDestination}: TComboboxAddressInput): ReactElement {
-	const	{provider} = useWeb3();
-	const	{balances} = useWallet();
-	const	{safeChainID} = useChainID();
-	const	[query, set_query] = useState('');
-	const	[isOpen, set_isOpen] = useThrottledState(false, 400);
+	const {provider} = useWeb3();
+	const {balances} = useWallet();
+	const {safeChainID} = useChainID();
+	const [query, set_query] = useState('');
+	const [isOpen, set_isOpen] = useThrottledState(false, 400);
 
 	const [{result: tokenData}, fetchTokenData] = useAsync(async function fetchToken(
 		_provider: providers.JsonRpcProvider,
@@ -157,7 +159,7 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 						<div className={'relative flex w-full flex-row items-center space-x-4'}>
 							<div key={value} className={'h-6 w-6'}>
 								{(possibleDestinations?.[toAddress(value)]?.logoURI || '') !== '' ? (
-									<Image
+									<ImageWithFallback
 										alt={''}
 										unoptimized
 										src={possibleDestinations?.[toAddress(value)]?.logoURI}

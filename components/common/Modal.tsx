@@ -27,9 +27,11 @@ function Modal({isOpen, set_isOpen, className = '', children}: {
 					leave={'ease-in duration-200'}
 					leaveFrom={'opacity-100'}
 					leaveTo={'opacity-0'}>
-					<div className={'fixed inset-0 bg-neutral-900/30'} />
+					<div
+						onClick={(): void => set_isOpen(false)}
+						className={'fixed inset-0 bg-neutral-900/30'} />
 				</Transition.Child>
-				<div className={'fixed inset-0 overflow-y-auto px-4'}>
+				<div className={'pointer-events-none fixed inset-0 overflow-y-auto px-4'}>
 					<div className={'mx-auto flex min-h-full w-full justify-center pt-16 md:pt-32'}>
 						<Transition.Child
 							as={Fragment}
@@ -40,7 +42,7 @@ function Modal({isOpen, set_isOpen, className = '', children}: {
 							leaveFrom={'opacity-100 scale-100'}
 							leaveTo={'opacity-0 scale-95'}>
 							<Dialog.Panel className={'mx-auto w-full items-center'}>
-								<div className={`box-0 relative mx-auto grid w-full max-w-xs grid-cols-12 md:max-w-3xl ${className}`}>
+								<div className={`box-0 relative mx-auto grid w-full max-w-xs grid-cols-12 sm:max-w-xl md:max-w-3xl ${className} pointer-events-auto`}>
 									<button
 										onClick={(): void => set_isOpen(false)}
 										className={'absolute right-4 top-4'}>

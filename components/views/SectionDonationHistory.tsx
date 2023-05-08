@@ -39,7 +39,9 @@ function	SectionDonationHistory({donateHistory, isLoading, name}: {
 					<p>{`No gib for ${name}`}</p>
 				</div>
 				<a href={'#donate'}>
-					<Button className={'!h-8 min-w-[160px]'} variant={'filled'}>
+					<Button
+						className={'!h-9 min-w-[160px]'}
+						variant={'filled'}>
 						{'Gib now'}
 					</Button>
 				</a>
@@ -62,7 +64,7 @@ function	SectionDonationHistory({donateHistory, isLoading, name}: {
 										width={40}
 										height={40}
 										quality={90}
-										src={`https://assets.smold.app/api/token/${donation.chainID}/${donation.token}/logo-128.png`}
+										src={`https://assets.smold.app/api/token/${donation.chainID === 1337 ? 1 : donation.chainID}/${donation.token}/logo-128.png`}
 										loading={'eager'} />
 								</div>
 								<div className={'flex flex-col'}>

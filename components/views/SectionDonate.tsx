@@ -16,12 +16,14 @@ import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
+import IconSettings from '@yearn-finance/web-lib/icons/IconSettings';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS, WETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
 import {toNormalizedBN, Zero} from '@yearn-finance/web-lib/utils/format.bigNumber';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
+import ModalDonateSettings from './ModalDonateSettings';
 import ModalMessage from './ModalMessage';
 
 import type {TTokenInfo, TTokenList} from 'contexts/useTokenList';
@@ -32,8 +34,9 @@ import type {TDict, TNDict} from '@yearn-finance/web-lib/types';
 import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
 function	TokenToSend({tokenToSend, onChange}: {tokenToSend: TTokenInfo, onChange: Dispatch<SetStateAction<TTokenInfo>>}): ReactElement {
-	const	[, set_isValidDestination] = useState<boolean | 'undetermined'>('undetermined');
-	const	[possibleDestinations, set_possibleDestinations] = useState<TDict<TTokenInfo>>({});
+	const {getCurrent} = useChain();
+	const [, set_isValidDestination] = useState<boolean | 'undetermined'>('undetermined');
+	const [possibleDestinations, set_possibleDestinations] = useState<TDict<TTokenInfo>>({});
 
 	/* 🔵 - Yearn Finance **************************************************************************
 	** On mount, fetch the token list from the tokenlistooor repo for the cowswap token list, which
@@ -48,10 +51,10 @@ function	TokenToSend({tokenToSend, onChange}: {tokenToSend: TTokenInfo, onChange
 			possibleDestinationsTokens[ETH_TOKEN_ADDRESS] = {
 				address: ETH_TOKEN_ADDRESS,
 				chainId: 1,
-				name: 'Ether',
-				symbol: 'ETH',
+				name: getCurrent()?.coin || 'Ether',
+				symbol: getCurrent()?.coin || 'ETH',
 				decimals: 18,
-				logoURI: `https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/multichain-tokens/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
+				logoURI: `https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/multichain-tokens/${getCurrent()?.chainID}/${ETH_TOKEN_ADDRESS}/logo-128.png`
 			};
 			for (const eachToken of cowswapTokenListResponse.tokens) {
 				if (eachToken.extra) {
@@ -119,7 +122,7 @@ function	AmountToSend({token, amountToSend, onChange}: {
 }
 
 type TOnDonateCallback = (toRefresh?: TUseBalancesTokens) => Promise<void>;
-function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
+function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
 	const {address, provider, isActive, ens, chainID} = useWeb3();
 	const chains = useChain();
 	const {safeChainID} = useChainID();
@@ -137,6 +140,19 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 		decimals: 18,
 		logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
 	});
+
+	useUpdateEffect((): void => {
+		if (safeChainID) {
+			set_tokenToSend({
+				address: ETH_TOKEN_ADDRESS,
+				chainId: safeChainID,
+				name: chains.getCurrent()?.coin || 'Ether',
+				symbol: chains.getCurrent()?.coin || 'ETH',
+				decimals: 18,
+				logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
+			});
+		}
+	}, [safeChainID]);
 
 	const onRegisterDonation = useCallback(async (txHash: string): Promise<void> => {
 		const	currentExplorer = chains.getCurrent()?.block_explorer;
@@ -306,6 +322,7 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 					<span className={'flex flex-col justify-between'}>
 						<b className={'pb-2'}>{'Token:'}</b>
 						<TokenToSend
+							key={safeChainID}
 							tokenToSend={tokenToSend}
 							onChange={set_tokenToSend} />
 					</span>
@@ -327,10 +344,11 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 							isDisabled={
 								!isActive ||
 								(amountToSend?.raw || Zero)?.isZero() ||
-								(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero)
+								(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero) ||
+								!(props.networks.includes(safeChainID))
 							}
 							onClick={onDonate}>
-							{'Donate'}
+							{props.networks.includes(safeChainID) ? 'Gib' : 'Gib disabled for this network'}
 						</Button>
 						<Button
 							variant={'light'}
@@ -364,4 +382,28 @@ function	SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 	);
 }
 
+function SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
+	const [isOpen, set_isOpen] = useState(false);
+
+	return (
+		<div className={'mb-20'}>
+			<div className={'flex flex-row items-center justify-between'}>
+				<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
+					{'Donate'}
+				</h2>
+				<button onClick={(): void => set_isOpen(true)}>
+					<IconSettings
+						className={'transition-color h-4 w-4 text-neutral-400 hover:text-neutral-900'} />
+				</button>
+			</div>
+
+			<DonateBox {...props} />
+			<ModalDonateSettings
+				networks={props.networks}
+				mutate={props.mutate}
+				isOpen={isOpen}
+				set_isOpen={set_isOpen} />
+		</div>
+	);
+}
 export default SectionDonate;

@@ -98,27 +98,43 @@ function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): Reac
 							</div>
 						</Listbox.Button>
 						<Transition
-							as={Fragment}
+							appear
 							show={open}
-							enter={'transition duration-100 ease-out'}
-							enterFrom={'transform scale-95 opacity-0'}
-							enterTo={'transform scale-100 opacity-100'}
-							leave={'transition duration-75 ease-out'}
-							leaveFrom={'transform scale-100 opacity-100'}
-							leaveTo={'transform scale-95 opacity-0'}>
-							<Listbox.Options className={'yearn--listbox-menu yearn--shadow -ml-1 bg-neutral-0'}>
-								{supportedNetworks.map((network): ReactElement => (
-									<Listbox.Option key={network.value} value={network}>
-										{({active}): ReactElement => (
-											<div
-												data-active={active}
-												className={'yearn--listbox-menu-item text-sm'}>
-												{network?.label || 'Ethereum'}
-											</div>
-										)}
-									</Listbox.Option>
-								))}
-							</Listbox.Options>
+							as={Fragment}>
+							<div>
+								<Transition.Child
+									as={Fragment}
+									enter={'ease-out duration-300'}
+									enterFrom={'opacity-0'}
+									enterTo={'opacity-100'}
+									leave={'ease-in duration-200'}
+									leaveFrom={'opacity-100'}
+									leaveTo={'opacity-0'}>
+									<div className={'fixed inset-0 bg-neutral-900/30'} />
+								</Transition.Child>
+								<Transition.Child
+									as={Fragment}
+									enter={'transition duration-100 ease-out'}
+									enterFrom={'transform scale-95 opacity-0'}
+									enterTo={'transform scale-100 opacity-100'}
+									leave={'transition duration-75 ease-out'}
+									leaveFrom={'transform scale-100 opacity-100'}
+									leaveTo={'transform scale-95 opacity-0'}>
+									<Listbox.Options className={'yearn--listbox-menu box-0 left-[-80%] -ml-1 !w-max bg-neutral-0'}>
+										{supportedNetworks.map((network): ReactElement => (
+											<Listbox.Option key={network.value} value={network}>
+												{({active}): ReactElement => (
+													<div
+														data-active={active}
+														className={'yearn--listbox-menu-item text-sm'}>
+														{network?.label || 'Ethereum'}
+													</div>
+												)}
+											</Listbox.Option>
+										))}
+									</Listbox.Options>
+								</Transition.Child>
+							</div>
 						</Transition>
 					</>
 				)}

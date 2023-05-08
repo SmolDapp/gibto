@@ -30,6 +30,7 @@ export type TReceiverProps = {
 	github: string;
 	reddit: string;
 	discord: string;
+	networks: number[];
 	isCreated: boolean;
 	isVerified: boolean;
 	identitySource: 'on-chain' | 'off-chain';
@@ -52,4 +53,12 @@ export type TDonationsProps = {
 	decimals: number
 	time: number
 	isVerified: boolean
+}
+
+export type TGoal = {
+	UUID: string;
+	startDate: number;
+	endDate: number;
+	value: number;
+	received: number;
 }

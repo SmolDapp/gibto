@@ -12,7 +12,7 @@ import SectionHero from './SectionHero';
 
 import type {TUseBalancesTokens} from 'hooks/useBalances';
 import type {ReactElement} from 'react';
-import type {TDonationsProps, TReceiverProps} from 'utils/types';
+import type {TDonationsProps, TGoal, TReceiverProps} from 'utils/types';
 
 function	Profile(props: TReceiverProps): ReactElement {
 	const {balances, refresh} = useWallet();
@@ -20,6 +20,15 @@ function	Profile(props: TReceiverProps): ReactElement {
 	const [currentPage, set_currentPage] = useState<number>(1);
 	const {data: donateHistory, isLoading, mutate} = useSWR<TDonationsProps[]>(
 		`${process.env.BASE_API_URI}/gives/${toAddress(props.address)}?page=${currentPage}`,
+		baseFetcher, {
+			revalidateOnFocus: false,
+			revalidateOnReconnect: true,
+			refreshInterval: 0
+		}
+	);
+
+	const {data: goal, isLoading: isLoadingGoal, mutate: mutateGoal} = useSWR<TGoal>(
+		`${process.env.BASE_API_URI}/goal/${toAddress(props.address)}`,
 		baseFetcher, {
 			revalidateOnFocus: false,
 			revalidateOnReconnect: true,
@@ -45,23 +54,21 @@ function	Profile(props: TReceiverProps): ReactElement {
 		}
 		await Promise.all([
 			mutate(),
+			mutateGoal(),
 			refresh(refreshArr)
 		]);
-	}, [balances, mutate, refresh]);
+	}, [balances, mutate, mutateGoal, refresh]);
 
 	return (
 		<>
-			<SectionHero {...props} />
+			<SectionHero
+				goal={goal}
+				mutateGoal={mutateGoal}
+				isLoadingGoal={isLoadingGoal}
+				{...props} />
 			<div className={'mx-auto mb-20 grid w-full max-w-5xl'}>
 				<SectionAbout {...props} />
-				<div className={'mb-20'}>
-					<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
-						{'Donate'}
-					</h2>
-					<SectionDonate
-						onDonateCallback={onDonateCallback}
-						{...props} />
-				</div>
+				<SectionDonate onDonateCallback={onDonateCallback} {...props} />
 				<div className={'mb-72'}>
 					<div className={'flex flex-row items-center justify-between'}>
 						<h2 id={'history'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
