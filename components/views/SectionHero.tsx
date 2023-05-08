@@ -92,7 +92,7 @@ function GoalSection(props: TReceiverProps & {
 			</div>
 		);
 	}
-	if (isOwner && !props.isLoadingGoal && !props.goal) {
+	if (isOwner && !props.isLoadingGoal && (!props.goal || (props.goal && props.goal.value === 0))) {
 		return (
 			<div className={'font-number col-span-7 flex w-full flex-col overflow-hidden border-l-0 border-neutral-200 pl-0 text-xs md:col-span-5 md:border-l md:pl-10 md:text-sm'}>
 				<div className={'relative flex h-full w-full flex-col items-center justify-center'}>
