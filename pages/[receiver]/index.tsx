@@ -36,7 +36,7 @@ function	Receiver(props: TReceiverProps): ReactElement {
 					description: props.description,
 					images: [
 						{
-							url: `https://gib.to/api/og?name=${props.address}`,
+							url: `https://gib.to/api/og?name=${props.name}`,
 							width: 1920,
 							height: 900,
 							alt: props.name
