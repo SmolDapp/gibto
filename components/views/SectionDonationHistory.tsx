@@ -26,9 +26,7 @@ function	SectionDonationHistory({donateHistory, isLoading, name}: {
 		return (
 			<section className={'box-100 mb-2 flex h-40 w-full items-center justify-center space-x-2 pt-6 text-sm text-neutral-400'}>
 				<IconSpinner />
-				<p>
-					{'Loading history...'}
-				</p>
+				<p>{'Loading history...'}</p>
 			</section>
 		);
 	} if (!isLoading && donateHistory.length === 0) {

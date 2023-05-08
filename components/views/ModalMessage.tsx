@@ -16,9 +16,9 @@ function ModalMessage({isOpen, set_isOpen, message, onConfirm, onCancel}: {
 		<Modal isOpen={isOpen} set_isOpen={set_isOpen}>
 			<Fragment>
 				<div className={'w-full md:w-5/6'}>
-					<b className={'text-base'}>{'Wanna attach a message?'}</b>
+					<b className={'text-base'}>{'Add a message?'}</b>
 					<p className={'pt-2 text-xs text-neutral-500 md:text-sm'}>
-						{'You can attach a kind message to your donation. This message will not be stored onChain and will be visible by everyone!'}
+						{'Your donation says more than words ever could, but you can also add some words because they’re nice too. This message won’t be stored on chain and will be visible to everyone.'}
 					</p>
 				</div>
 				<div className={'flex w-full flex-col space-y-4 pt-6'}>

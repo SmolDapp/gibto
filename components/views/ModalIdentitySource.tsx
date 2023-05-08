@@ -43,7 +43,7 @@ function ModalIdentitySource({identity, isOpen, set_isOpen}: {
 		<Modal isOpen={isOpen} set_isOpen={set_isOpen}>
 			<Fragment>
 				<div className={'w-full md:w-5/6'}>
-					<b className={'text-base'}>{'Choose your Identity Source'}</b>
+					<b className={'text-base'}>{'onChain or offChain identity'}</b>
 					<p className={'pt-2 text-xs text-neutral-500 md:text-sm'}>
 						{'By default if you have an ENS name, your identity will be onChain and when updating your profile, the changes will be stored on-chain as ENS records. However, you may want to change to an offChain source to avoid paying gas fees.'}
 					</p>
