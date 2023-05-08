@@ -49,7 +49,7 @@ function OGGenerator(request: NextRequest): any {
 						alignItems: 'center',
 						textAlign: 'center',
 						marginTop: 16,
-						borderRadius: 8,
+						borderRadius: 32,
 						backgroundColor: '#FFFFFFEE',
 						padding: '36px',
 						border: 'solid 1px #EBEBEB',
