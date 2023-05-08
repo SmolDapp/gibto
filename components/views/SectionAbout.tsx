@@ -95,7 +95,7 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 				ref={aboutRef}
 				contentEditable={isOwner}
 				suppressContentEditableWarning
-				className={`-mt-4 space-y-2 whitespace-break-spaces py-4 text-sm text-neutral-400 ${contentValue === '' ? 'italic' : ''}`}
+				className={`-mt-4 space-y-2 whitespace-break-spaces py-4 text-sm text-neutral-400  ${contentValue === '' ? 'italic' : ''}`}
 				onBlur={(): void => {
 					if (isOwner && aboutRef?.current) {
 						const contentValue = aboutRef.current.innerText;
