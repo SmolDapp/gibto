@@ -40,13 +40,13 @@ function	Receiver(props: TReceiverProps): ReactElement {
 							width: 1920,
 							height: 900,
 							alt: props.name
-						},
-						{
-							url: props.cover || meta.og,
-							width: 1200,
-							height: 675,
-							alt: props.name
 						}
+						// {
+						// 	url: props.cover || meta.og,
+						// 	width: 1200,
+						// 	height: 675,
+						// 	alt: props.name
+						// }
 					]
 				}}
 				twitter={{
