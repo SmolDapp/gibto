@@ -99,7 +99,6 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 				onBlur={(): void => {
 					if (isOwner && aboutRef?.current) {
 						const contentValue = aboutRef.current.innerText;
-						console.log(contentValue);
 						if (contentValue === '') {
 							aboutRef.current.innerText = placeHolder;
 						}

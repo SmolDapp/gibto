@@ -92,7 +92,7 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 					changes.cover = fields.cover;
 				}
 				if (identity.description !== fields.description) {
-					changes.description = fields.description;
+					changes.description = fields.description.replace(/(^\s+|\s+$)/g, '');
 				}
 				if (identity.discord !== fields.discord) {
 					changes.discord = fields.discord;

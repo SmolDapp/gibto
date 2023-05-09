@@ -244,8 +244,7 @@ function	Home(): ReactElement {
 													i < 15 ? 'hidden sm:hidden md:flex' :
 														i < 16 ? 'hidden sm:flex' :
 															i < 18 ? 'flex' : ''
-										}
-										`}>
+										}`}>
 										<div
 											className={'box-100 h-full w-full !rounded-xl bg-cover bg-center p-2'}
 											style={{backgroundImage: `url('${cover}')`}}>
