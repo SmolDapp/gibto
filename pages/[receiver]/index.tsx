@@ -22,6 +22,7 @@ function	Receiver(props: TReceiverProps): ReactElement {
 	);
 
 	const	profile = {...(data || props)};
+	const	todayMidnightAsTimestamp = new Date().setHours(0, 0, 0, 0).valueOf();
 	return (
 		<>
 			<NextSeo
@@ -31,7 +32,7 @@ function	Receiver(props: TReceiverProps): ReactElement {
 				openGraph={{
 					title: `Gib to ${profile.name}`,
 					description: profile.description,
-					images: [{url: `https://gib.to/api/og?name=${profile.name}`, width: 1920, height: 900, alt: profile.name}]
+					images: [{url: `https://gib.to/api/og?name=${profile.name}&time=${todayMidnightAsTimestamp}`, width: 1920, height: 900, alt: profile.name}]
 				}}
 				twitter={{
 					handle: profile.twitter || meta.twitter,
