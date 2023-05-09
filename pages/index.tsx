@@ -225,8 +225,8 @@ function	Home(): ReactElement {
 						<FlipMove
 							duration={500}
 							easing={'ease-in-out'}
-							className={'sm:grid-cols- grid grid-cols-1 gap-4 lg:grid-cols-4 xl:grid-cols-6'}>
-							{randomOrderedData?.map((receiver): ReactElement => {
+							className={'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'}>
+							{randomOrderedData?.map((receiver, i): ReactElement => {
 								let {cover} = receiver;
 								if (cover.startsWith('https://gateway.pinata.cloud/ipfs')) {
 									cover = cover.replace('https://gateway.pinata.cloud/ipfs', 'https://ipfs.io/ipfs');
@@ -235,9 +235,19 @@ function	Home(): ReactElement {
 									cover = cover.replace('ipfs://', 'https://ipfs.io/ipfs/');
 								}
 								return (
-									<Link key={receiver.UUID} href={`/${receiver.ensHandle || receiver.address}`}>
+									<Link
+										key={receiver.UUID}
+										href={`/${receiver.ensHandle || receiver.address}`}
+										className={`h-full w-full ${
+											i < 6 ? 'hidden sm:hidden md:hidden lg:hidden xl:flex' :
+												i < 12 ? 'hidden sm:hidden md:hidden lg:flex' :
+													i < 15 ? 'hidden sm:hidden md:flex' :
+														i < 16 ? 'hidden sm:flex' :
+															i < 18 ? 'flex' : ''
+										}
+										`}>
 										<div
-											className={'box-100 !rounded-xl bg-cover bg-center p-2'}
+											className={'box-100 h-full w-full !rounded-xl bg-cover bg-center p-2'}
 											style={{backgroundImage: `url('${cover}')`}}>
 
 											<div className={'box-0 h-full !rounded-lg py-4'}>
