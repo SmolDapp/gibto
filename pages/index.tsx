@@ -177,10 +177,13 @@ function	Home(): ReactElement {
 			<div className={'mx-auto grid w-full max-w-5xl'}>
 				<div className={'mx-auto my-6 flex max-w-3xl flex-col justify-center text-center md:mt-20'}>
 					<h1 className={'-ml-1 mt-4 text-3xl tracking-tight text-neutral-900 md:mt-6 md:text-5xl'}>
-						{'Sponsorship, unrestricted'}
+						{'Fund the future.'}
 					</h1>
 					<p className={'mt-4 w-full text-base leading-normal text-neutral-500 md:text-lg md:leading-8'}>
-						{'Designed to provide unrestricted funding, resources, and guidance to help you bring your ideas to life.'}
+						{'The easiest way to donate to the crypto projects you love.'}
+					</p>
+					<p className={'w-full text-base leading-normal text-neutral-500 md:text-lg md:leading-8'}>
+						{'So that builders can bring their ideas to life.'}
 					</p>
 				</div>
 
