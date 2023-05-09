@@ -245,7 +245,7 @@ export function ProfileSection(props: TReceiverProps): ReactElement {
 					<SocialSection {...props} />
 				</div>
 			</div>
-			<div className={'absolute -right-6 top-2'}>
+			<div className={'absolute -right-2 top-2 md:-right-6'}>
 				<a href={`https://twitter.com/intent/tweet?text=${urlEncoded(props.isOwner ? `Check out my project on gib 👉👈\nhttps://gib.to/${props.ensHandle || props.address}` : `Check out ${props.ensHandle.replace('.eth', '') || truncateHex(props.address, 4)}'s project on gib\nhttps://gib.to/${props.ensHandle || props.address}`)}`}>
 					<button className={'flex items-center justify-center space-x-1 text-xs text-neutral-400 transition-colors hover:text-neutral-900'}>
 						<p>{'Share'}</p>
