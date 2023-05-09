@@ -73,8 +73,8 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 	return (
 		<div className={'mb-20'}>
 			<div className={'flex flex-row items-center justify-between'}>
-				<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
-					{'Donate'}
+				<h2 id={'about'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
+					{'About'}
 				</h2>
 				{isOwner && (
 					<div className={'flex flex-row items-center justify-center space-x-4'}>
@@ -95,7 +95,7 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 				ref={aboutRef}
 				contentEditable={isOwner}
 				suppressContentEditableWarning
-				className={`-mt-4 space-y-2 whitespace-break-spaces py-4 text-sm text-neutral-400  ${contentValue === '' ? 'italic' : ''}`}
+				className={`-mt-4 space-y-2 whitespace-break-spaces py-4 text-sm ${contentValue === '' ? 'italic text-neutral-400' : 'text-neutral-700'}`}
 				onBlur={(): void => {
 					if (isOwner && aboutRef?.current) {
 						const contentValue = aboutRef.current.innerText;
