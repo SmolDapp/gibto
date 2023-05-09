@@ -1,19 +1,25 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
+import FlipMove from 'react-flip-move';
+import Link from 'next/link';
 import {useRouter} from 'next/router';
+import Avatar from 'components/Avatar';
 import IconCheck from 'components/icons/IconCheck';
 import IconCircleCross from 'components/icons/IconCircleCross';
 import {isAddress} from 'ethers/lib/utils';
 import {checkENSValidity, checkLensValidity} from 'utils';
 import lensProtocol from 'utils/lens.tools';
+import useSWR from 'swr';
 import {useUpdateEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useUI} from '@yearn-finance/web-lib/contexts/useUI';
 import IconLoader from '@yearn-finance/web-lib/icons/IconLoader';
-import {isZeroAddress, toAddress} from '@yearn-finance/web-lib/utils/address';
+import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
+import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 
 import type {ReactElement} from 'react';
+import type {TReceiverProps} from 'utils/types';
 
 function	SearchFor(): ReactElement {
 	const router = useRouter();
@@ -104,15 +110,10 @@ function	SearchFor(): ReactElement {
 					onLoadDone();
 				}
 			}}>
-			<label
-				htmlFor={'search'}
-				className={'text-base text-neutral-400'}>
-				{'Find a creator, a project, or a community'}
-			</label>
 			<div className={'relative mt-2'}>
 				<input
 					id={'search'}
-					className={'h-16 w-full rounded-lg border border-neutral-300 px-3 pr-10 text-base text-neutral-900 transition-colors placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-0 focus:ring-transparent'}
+					className={'h-16 w-full rounded-lg border border-neutral-300 bg-neutral-100 px-3 pr-10 text-base text-neutral-900 transition-colors placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-0 focus:ring-transparent'}
 					aria-invalid={!isValidValue}
 					onFocus={async (): Promise<void> => checkDestinationValidity()}
 					onBlur={async (): Promise<void> => checkDestinationValidity()}
@@ -120,7 +121,7 @@ function	SearchFor(): ReactElement {
 					spellCheck={false}
 					autoComplete={'off'}
 					required
-					placeholder={'Search by ens, lens handle or address'}
+					placeholder={'Search by ens handle or address'}
 					value={value}
 					onChange={(e): void => {
 						set_isValidValue('undetermined');
@@ -146,20 +147,127 @@ function	SearchFor(): ReactElement {
 }
 
 function	Home(): ReactElement {
+	const [selectedIndex, set_selectedIndex] = useState<number>(0);
+	const {data} = useSWR<TReceiverProps[]>(
+		`${process.env.BASE_API_URI}/profiles/featured`,
+		baseFetcher, {
+			revalidateOnFocus: false,
+			revalidateOnReconnect: true,
+			refreshInterval: 0
+		}
+	);
+
+	const randomOrderedData = useMemo((): TReceiverProps[] => {
+		selectedIndex;
+		if (data) {
+			const orderedData = [...data];
+			orderedData.forEach((item): void => {
+				item.order = Math.random();
+			});
+			orderedData.sort((a, b): number => {
+				return ((a?.order || 0) - (b?.order || 0));
+			});
+			return orderedData;
+		}
+		return [];
+	}, [data, selectedIndex]);
+
 	return (
-		<div className={'mx-auto grid w-full max-w-5xl'}>
-			<div className={'mb-10 mt-6 flex flex-col justify-center md:mt-20'}>
-				<h1 className={'-ml-1 mt-4 text-3xl tracking-tight text-neutral-900 md:mt-6 md:text-5xl'}>
-					{'Sponsorship, unrestricted'}
-				</h1>
-				<p className={'mt-4 w-full text-base leading-normal text-neutral-500 md:w-3/4 md:text-lg md:leading-8'}>
-					{'Designed to provide unrestricted funding, resources, and guidance to help you bring your ideas to life.'}
-				</p>
+		<div>
+			<div className={'mx-auto grid w-full max-w-5xl'}>
+				<div className={'mx-auto my-6 flex max-w-3xl flex-col justify-center text-center md:mt-20'}>
+					<h1 className={'-ml-1 mt-4 text-3xl tracking-tight text-neutral-900 md:mt-6 md:text-5xl'}>
+						{'Sponsorship, unrestricted'}
+					</h1>
+					<p className={'mt-4 w-full text-base leading-normal text-neutral-500 md:text-lg md:leading-8'}>
+						{'Designed to provide unrestricted funding, resources, and guidance to help you bring your ideas to life.'}
+					</p>
+				</div>
+
+				<div className={'mx-auto w-full max-w-3xl'}>
+					<SearchFor />
+				</div>
 			</div>
 
-			<div>
-				<div className={'box-100 relative p-6 pb-10'}>
-					<SearchFor />
+			<div className={'mx-auto mt-24 hidden w-full max-w-5xl'}>
+				<div className={'mb-4 flex flex-row space-x-4 overflow-x-scroll'}>
+					<div
+						onClick={(): void => set_selectedIndex(0)}
+						className={`cursor-pointer rounded-2xl border border-neutral-200 px-4 py-1 ${selectedIndex === 0 ? 'bg-neutral-100' : 'bg-neutral-0'}`}>
+						{'Featured'}
+					</div>
+					<div
+						onClick={(): void => set_selectedIndex(1)}
+						className={`cursor-pointer rounded-2xl border border-neutral-200 px-4 py-1 ${selectedIndex === 1 ? 'bg-neutral-100' : 'bg-neutral-0'}`}>
+						{'Recently Added'}
+					</div>
+					<div
+						onClick={(): void => set_selectedIndex(2)}
+						className={`cursor-pointer rounded-2xl border border-neutral-200 px-4 py-1 ${selectedIndex === 2 ? 'bg-neutral-100' : 'bg-neutral-0'}`}>
+						{'Art'}
+					</div>
+					<div
+						onClick={(): void => set_selectedIndex(3)}
+						className={`cursor-pointer rounded-2xl border border-neutral-200 px-4 py-1 ${selectedIndex === 3 ? 'bg-neutral-100' : 'bg-neutral-0'}`}>
+						{'Music'}
+					</div>
+					<div
+						onClick={(): void => set_selectedIndex(4)}
+						className={`cursor-pointer rounded-2xl border border-neutral-200 px-4 py-1 ${selectedIndex === 4 ? 'bg-neutral-100' : 'bg-neutral-0'}`}>
+						{'Writing'}
+					</div>
+				</div>
+			</div>
+
+			<div className={'relative mt-16 w-full overflow-x-hidden'}>
+				<div className={'ml-[-10vw] flex w-[120vw] items-center justify-center'}>
+					<div className={'mb-44'}>
+						<FlipMove
+							duration={500}
+							easing={'ease-in-out'}
+							className={'sm:grid-cols- grid grid-cols-1 gap-4 lg:grid-cols-4 xl:grid-cols-6'}>
+							{randomOrderedData?.map((receiver): ReactElement => {
+								let {cover} = receiver;
+								if (cover.startsWith('https://gateway.pinata.cloud/ipfs')) {
+									cover = cover.replace('https://gateway.pinata.cloud/ipfs', 'https://ipfs.io/ipfs');
+								}
+								if (cover.startsWith('ipfs://')) {
+									cover = cover.replace('ipfs://', 'https://ipfs.io/ipfs/');
+								}
+								return (
+									<Link key={receiver.UUID} href={`/${receiver.ensHandle || receiver.address}`}>
+										<div
+											className={'box-100 !rounded-xl bg-cover bg-center p-2'}
+											style={{backgroundImage: `url('${cover}')`}}>
+
+											<div className={'box-0 h-full !rounded-lg py-4'}>
+												<div className={'flex items-center justify-center'}>
+													<Avatar
+														address={toAddress(receiver.address)}
+														src={receiver.avatar} />
+												</div>
+												<div className={'flex items-center justify-center'}>
+													<h1 className={'flex flex-row items-center pt-2 text-xl capitalize tracking-tight text-neutral-900 md:text-2xl'}>
+														{receiver.name}
+													</h1>
+												</div>
+												<div className={'flex items-center justify-center'}>
+													<p className={'font-number text-center text-xxs font-normal tracking-normal text-neutral-400 md:text-xs'}>
+														{truncateHex(receiver.address, 4)}
+													</p>
+												</div>
+
+												<p className={'mt-2 px-4 text-sm text-neutral-500 md:mt-4'}>
+													{receiver?.description || `${receiver.name} hasn’t written anything yet. must be shy...`}
+												</p>
+											</div>
+										</div>
+									</Link>
+								);
+							})}
+						</FlipMove>
+
+					</div>
 				</div>
 			</div>
 		</div>

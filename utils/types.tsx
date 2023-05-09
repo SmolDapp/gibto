@@ -15,6 +15,7 @@ export type TToken = {
 }
 
 export type TReceiverProps = {
+	UUID: string;
 	address: string;
 	name: string;
 	ensHandle: string;
@@ -34,6 +35,7 @@ export type TReceiverProps = {
 	isCreated: boolean;
 	isVerified: boolean;
 	identitySource: 'on-chain' | 'off-chain';
+	order?: number;
 } & {mutate: () => void};
 
 export type TDonationsProps = {

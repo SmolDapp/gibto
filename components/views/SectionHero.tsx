@@ -202,7 +202,7 @@ function GoalSection(props: TReceiverProps & {
 	);
 }
 
-function ProfileSection(props: TReceiverProps): ReactElement {
+export function ProfileSection(props: TReceiverProps): ReactElement {
 	function	renderCheck(): ReactElement {
 		if (props.isVerified) {
 			return (

@@ -47,7 +47,7 @@ function Avatar({src, address}: {src: string, address: TAddress}): ReactElement 
 				<Image
 					src={sanitizedSrc}
 					alt={''}
-					className={'!h-12 !w-12 rounded-2xl object-cover'}
+					className={'!h-12 !w-12 rounded-2xl object-cover outline outline-neutral-100'}
 					width={400}
 					height={400}
 					unoptimized />
