@@ -217,6 +217,20 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 							onChange={(e): void => set_fields({...fields, telegram: e.target.value})} />
 					</div>
 				</label>
+				<label
+					aria-label={'website'}
+					className={'flex flex-col justify-between'}>
+					<div className={'flex flex-row rounded-md border border-neutral-200 focus:border-neutral-400 focus:outline-none'}>
+						<input
+							type={'text'}
+							name={'website'}
+							id={'website'}
+							placeholder={'https://personal-website.com'}
+							className={'h-full w-full border-none bg-transparent p-2 text-sm focus:ring-0'}
+							value={fields.website}
+							onChange={(e): void => set_fields({...fields, website: e.target.value})} />
+					</div>
+				</label>
 				<div className={'sticky inset-x-0 bottom-0 w-full pt-2 md:relative'}>
 					<Button
 						className={'w-full'}

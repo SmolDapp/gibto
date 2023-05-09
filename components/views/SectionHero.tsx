@@ -9,6 +9,7 @@ import {motion} from 'framer-motion';
 import {useMountEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
+import IconLinkOut from '@yearn-finance/web-lib/icons/IconLinkOut';
 import IconSocialDiscord from '@yearn-finance/web-lib/icons/IconSocialDiscord';
 import IconSocialGithub from '@yearn-finance/web-lib/icons/IconSocialGithub';
 import IconSocialTwitter from '@yearn-finance/web-lib/icons/IconSocialTwitter';
@@ -21,6 +22,10 @@ import ModalIdentitySource from './ModalIdentitySource';
 
 import type {ReactElement} from 'react';
 import type {Maybe, TGoal, TReceiverProps} from 'utils/types';
+
+function urlEncoded(str: string): string {
+	return encodeURIComponent(str).replace(/[!'()*]/g, (c): string => `%${c.charCodeAt(0).toString(16)}`);
+}
 
 function SocialSection(props: TReceiverProps): ReactElement {
 	return (
@@ -46,7 +51,7 @@ function SocialSection(props: TReceiverProps): ReactElement {
 				className={props.telegram ? '' : 'pointer-events-none opacity-40'}
 				icon={<IconSocialTelegram />} />
 			<SocialMediaCard
-				href={`https://${props.website}`}
+				href={props.website}
 				className={props.website ? '' : 'pointer-events-none opacity-40'}
 				icon={<IconSocialWebsite />} />
 		</Fragment>
@@ -58,8 +63,6 @@ function GoalSection(props: TReceiverProps & {
 	isLoadingGoal: boolean,
 	mutateGoal: VoidFunction
 }): ReactElement {
-	const {address} = useWeb3();
-	const isOwner = toAddress(address) === toAddress(props.address);
 	const [isOpen, set_isOpen] = useState(false);
 	const [randomFluff, set_randomFluff] = useState('');
 
@@ -92,7 +95,7 @@ function GoalSection(props: TReceiverProps & {
 			</div>
 		);
 	}
-	if (isOwner && !props.isLoadingGoal && (!props.goal || (props.goal && props.goal.value === 0))) {
+	if (props.isOwner && !props.isLoadingGoal && (!props.goal || (props.goal && props.goal.value === 0))) {
 		return (
 			<div className={'font-number col-span-7 flex w-full flex-col overflow-hidden border-l-0 border-neutral-200 pl-0 text-xs md:col-span-5 md:border-l md:pl-10 md:text-sm'}>
 				<div className={'relative flex h-full w-full flex-col items-center justify-center'}>
@@ -121,7 +124,7 @@ function GoalSection(props: TReceiverProps & {
 			</div>
 		);
 	}
-	if (isOwner && !props.isLoadingGoal && (props.goal && props.goal.value > 0)) {
+	if (props.isOwner && !props.isLoadingGoal && (props.goal && props.goal.value > 0)) {
 		return (
 			<div className={'font-number col-span-7 flex w-full flex-col overflow-hidden border-l-0 border-neutral-200 pl-0 text-xs md:col-span-5 md:border-l md:pl-10 md:text-sm'}>
 				<div className={'relative flex h-full w-full flex-col items-center justify-center space-y-4'}>
@@ -237,8 +240,18 @@ export function ProfileSection(props: TReceiverProps): ReactElement {
 			<p className={'mt-2 min-h-[30px] text-sm text-neutral-500 md:mt-4 md:min-h-[60px] md:text-base'}>
 				{props?.description || `${props.name} hasn’t written anything yet. must be shy...`}
 			</p>
-			<div className={'mt-auto hidden flex-row space-x-4 pt-6 md:flex'}>
-				<SocialSection {...props} />
+			<div className={'mt-auto items-center justify-between pt-6 md:flex'}>
+				<div className={' hidden flex-row space-x-4 md:flex'}>
+					<SocialSection {...props} />
+				</div>
+			</div>
+			<div className={'absolute -right-6 top-2'}>
+				<a href={`https://twitter.com/intent/tweet?text=${urlEncoded(props.isOwner ? `Check out my project on gib 👉👈\nhttps://gib.to/${props.ensHandle || props.address}` : `Check out ${props.ensHandle.replace('.eth', '') || truncateHex(props.address, 4)}'s project on gib\nhttps://gib.to/${props.ensHandle || props.address}`)}`}>
+					<button className={'flex items-center justify-center space-x-1 text-xs text-neutral-400 transition-colors hover:text-neutral-900'}>
+						<p>{'Share'}</p>
+						<IconLinkOut className={'h-3 w-3'} />
+					</button>
+				</a>
 			</div>
 		</div>
 	);
@@ -281,24 +294,22 @@ function SectionHero(props: TReceiverProps & {
 	}
 
 	function renderIdentitySourceButton(): ReactElement {
-		const canEdit = toAddress(address) == toAddress(props.address);
-
 		if (props.identitySource === 'on-chain') {
 			return (
 				<div
-					onClick={(): void => canEdit ? set_isOpenIdentity(true) : undefined}
-					className={`absolute right-4 top-2 flex flex-row items-center space-x-1 ${canEdit ? 'group cursor-pointer' : ''}`}>
+					onClick={(): void => props.isOwner ? set_isOpenIdentity(true) : undefined}
+					className={`absolute right-4 top-2 flex flex-row items-center space-x-1 ${props.isOwner ? 'group cursor-pointer' : ''}`}>
 					<div className={'h-2 w-2 rounded-full bg-[#16a34a] opacity-60'} />
-					<p className={`text-xxs text-neutral-400 ${canEdit ? 'group-hover:underline' : ''}`}>{'OnChain'}</p>
+					<p className={`text-xxs text-neutral-400 ${props.isOwner ? 'group-hover:underline' : ''}`}>{'OnChain'}</p>
 				</div>
 			);
 		}
 		return (
 			<div
-				onClick={(): void => canEdit ? set_isOpenIdentity(true) : undefined}
-				className={`absolute right-4 top-2 flex flex-row items-center space-x-1 ${canEdit ? 'group cursor-pointer' : ''}`}>
+				onClick={(): void => props.isOwner ? set_isOpenIdentity(true) : undefined}
+				className={`absolute right-4 top-2 flex flex-row items-center space-x-1 ${props.isOwner ? 'group cursor-pointer' : ''}`}>
 				<div className={'h-2 w-2 rounded-full bg-neutral-300 opacity-60'} />
-				<p className={`text-xxs text-neutral-400 ${canEdit ? 'group-hover:underline' : ''}`}>{'OffChain'}</p>
+				<p className={`text-xxs text-neutral-400 ${props.isOwner ? 'group-hover:underline' : ''}`}>{'OffChain'}</p>
 			</div>
 		);
 	}

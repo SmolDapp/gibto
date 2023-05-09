@@ -10,7 +10,6 @@ import type {TReceiverProps} from 'utils/types';
 
 function	SectionAbout(props: TReceiverProps): ReactElement {
 	const	{provider, address} = useWeb3();
-	const	isOwner = toAddress(props.address) === toAddress(address);
 	const	aboutRef = useRef<HTMLDivElement>(null);
 	const	[contentValue, set_contentValue] = useState<string>(props.about);
 	const	[isSaving, set_isSaving] = useState(false);
@@ -76,12 +75,12 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 				<h2 id={'about'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
 					{'About'}
 				</h2>
-				{isOwner && (
+				{props.isOwner && (
 					<div className={'flex flex-row items-center justify-center space-x-4'}>
 						<button
 							type={'button'}
 							onClick={onSaveAbout}
-							className={`text-xs text-neutral-600 underline transition-opacity duration-300 hover:text-neutral-900 ${(isOwner && props.about !== contentValue) ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+							className={`text-xs text-neutral-600 underline transition-opacity duration-300 hover:text-neutral-900 ${(props.isOwner && props.about !== contentValue) ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
 							{'Save changes'}
 						</button>
 						<button onClick={onTryToFocus}>
@@ -93,11 +92,11 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 			</div>
 			<div
 				ref={aboutRef}
-				contentEditable={isOwner}
+				contentEditable={props.isOwner}
 				suppressContentEditableWarning
 				className={`-mt-4 space-y-2 whitespace-break-spaces py-4 text-sm ${contentValue === '' ? 'italic text-neutral-400' : 'text-neutral-700'}`}
 				onBlur={(): void => {
-					if (isOwner && aboutRef?.current) {
+					if (props.isOwner && aboutRef?.current) {
 						const contentValue = aboutRef.current.innerText;
 						if (contentValue === '') {
 							aboutRef.current.innerText = placeHolder;
@@ -105,7 +104,7 @@ function	SectionAbout(props: TReceiverProps): ReactElement {
 					}
 				}}
 				onFocus={(): void => {
-					if (isOwner && aboutRef?.current) {
+					if (props.isOwner && aboutRef?.current) {
 						const contentValue = aboutRef?.current?.innerText;
 						if (contentValue === placeHolder || contentValue === '') {
 							aboutRef.current.innerText = '';

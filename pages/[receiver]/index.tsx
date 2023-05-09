@@ -4,6 +4,7 @@ import Profile from 'components/views/Profile';
 import meta from 'public/manifest.json';
 import axios from 'axios';
 import useSWR from 'swr';
+import useWeb3 from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 
@@ -12,6 +13,7 @@ import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
 
 function	Receiver(props: TReceiverProps): ReactElement {
+	const {address} = useWeb3();
 	const {data, mutate} = useSWR<TReceiverProps>(
 		`${process.env.BASE_API_URI}/profile/${toAddress(props.address)}`,
 		baseFetcher, {
@@ -41,6 +43,7 @@ function	Receiver(props: TReceiverProps): ReactElement {
 				}} />
 			<Profile
 				{...profile}
+				isOwner={toAddress(address) == toAddress(profile.address)}
 				key={profile.address}
 				mutate={mutate} />
 		</>

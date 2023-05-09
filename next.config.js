@@ -33,6 +33,11 @@ module.exports = (phase) => withTM(withPWA({
 				source: '/github',
 				destination: 'https://github.com/SmolDapp/gibto',
 				permanent: true
+			},
+			{
+				source: '/favicon.ico',
+				destination: 'https://gib.to/favicons/favicon.ico',
+				permanent: true
 			}
 		];
 	},

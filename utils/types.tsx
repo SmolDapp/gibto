@@ -34,6 +34,7 @@ export type TReceiverProps = {
 	networks: number[];
 	isCreated: boolean;
 	isVerified: boolean;
+	isOwner: boolean;
 	identitySource: 'on-chain' | 'off-chain';
 	order?: number;
 } & {mutate: () => void};

@@ -386,9 +386,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 }
 
 function SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
-	const {address} = useWeb3();
 	const [isOpen, set_isOpen] = useState(false);
-	const isOwner = toAddress(props.address) === toAddress(address);
 
 	return (
 		<div className={'mb-20'}>
@@ -396,7 +394,7 @@ function SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 				<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
 					{'Donate'}
 				</h2>
-				{isOwner && (
+				{props.isOwner && (
 					<button onClick={(): void => set_isOpen(true)}>
 						<IconSettings
 							className={'transition-color h-4 w-4 text-neutral-400 hover:text-neutral-900'} />
