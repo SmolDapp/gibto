@@ -249,7 +249,7 @@ function	Home(): ReactElement {
 															i < 18 ? 'flex' : ''
 										}`}>
 										<div
-											className={'box-100 group h-full w-full overflow-hidden !rounded-xl bg-cover bg-center p-2 transition-all duration-500 ease-in-out hover:p-0'}
+											className={'box-100 group aspect-[4/3] h-full w-full overflow-hidden !rounded-xl bg-cover bg-center p-2 transition-all duration-500 ease-in-out hover:p-0'}
 											style={{backgroundImage: `url('${cover}')`}}>
 
 											<div className={'box-0 h-full !rounded-lg p-4 transition-all duration-500 ease-in-out group-hover:!rounded-[11px] group-hover:p-6'}>
@@ -269,7 +269,7 @@ function	Home(): ReactElement {
 													</p>
 												</div>
 
-												<p className={'mt-2 line-clamp-3 text-sm text-neutral-500 md:mt-4'}>
+												<p className={'mt-2 line-clamp-4 text-sm text-neutral-500 md:mt-4'}>
 													{receiver?.description || `${receiver.name} hasn’t written anything yet. must be shy...`}
 												</p>
 											</div>

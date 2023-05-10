@@ -355,9 +355,10 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 						</Button>
 						<Button
 							variant={'light'}
-							className={attachedMessage === '' ? '' : '!text-[#22c55e]'}
+							className={'flex !w-fit min-w-fit flex-row space-x-2'}
 							onClick={(): void => set_isModalOpen(true)}>
-							{attachedMessage === '' ? <IconMessage className={'h-5 w-5 '} /> : <IconMessageCheck className={'h-5 w-5 '} />}
+							<p className={'text-xs'}>{'Add a message'}</p>
+							{attachedMessage === '' ? <IconMessage className={'h-4 w-4 '} /> : <IconMessageCheck className={'h-4 w-4 !text-[#22c55e]'} />}
 						</Button>
 					</div>
 					<div className={'font-number w-full pt-1 text-center text-xxs text-neutral-400'}>
