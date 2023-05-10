@@ -1,5 +1,5 @@
-import React, {useCallback, useMemo, useState} from 'react';
-import FlipMove from 'react-flip-move';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import Marquee from 'react-fast-marquee';
 import Link from 'next/link';
 import {useRouter} from 'next/router';
 import Avatar from 'components/Avatar';
@@ -146,6 +146,59 @@ function	SearchFor(): ReactElement {
 	);
 }
 
+function InfiniteLooper({
+	speed,
+	direction,
+	children
+}: {
+	speed: number;
+	direction: 'right' | 'left';
+	children: React.ReactNode;
+}) {
+	const [looperInstances, setLooperInstances] = useState(1);
+	const outerRef = useRef<HTMLDivElement>(null);
+	const innerRef = useRef<HTMLDivElement>(null);
+
+	const setupInstances = useCallback(() => {
+		if (!innerRef?.current || !outerRef?.current) {
+			return;
+		}
+
+		const {width} = innerRef.current.getBoundingClientRect();
+
+		const {width: parentWidth} = outerRef.current.getBoundingClientRect();
+
+		const instanceWidth = width / innerRef.current.children.length;
+
+		if (width < parentWidth + instanceWidth) {
+			setLooperInstances(looperInstances + Math.ceil(parentWidth / width));
+		}
+	}, [looperInstances]);
+
+	useEffect(() => {
+		setupInstances();
+	}, []);
+
+	return (
+		<div className={'looper'} ref={outerRef}>
+			<div className={'looper__innerList'} ref={innerRef}>
+				{[...Array(looperInstances)].map((_, ind) => (
+					<div
+						key={ind}
+						className={'looper__listInstance'}
+						style={{
+							animationDuration: `${speed}s`,
+							animationDirection: direction === 'right' ? 'reverse' : 'normal'
+						}}
+					>
+						{children}
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
 function	Home(): ReactElement {
 	const [selectedIndex, set_selectedIndex] = useState<number>(0);
 	const {data} = useSWR<TReceiverProps[]>(
@@ -156,8 +209,6 @@ function	Home(): ReactElement {
 			refreshInterval: 0
 		}
 	);
-
-	console.log(data);
 
 	const randomOrderedData = useMemo((): TReceiverProps[] => {
 		selectedIndex;
@@ -173,6 +224,57 @@ function	Home(): ReactElement {
 		}
 		return [];
 	}, [data, selectedIndex]);
+
+	function renderProfileBox(receiver: TReceiverProps, i: number): ReactElement {
+		let {cover} = receiver;
+		if (cover.startsWith('https://gateway.pinata.cloud/ipfs')) {
+			cover = cover.replace('https://gateway.pinata.cloud/ipfs', 'https://ipfs.io/ipfs');
+		}
+		if (cover.startsWith('ipfs://')) {
+			cover = cover.replace('ipfs://', 'https://ipfs.io/ipfs/');
+		}
+		return (
+			<Link
+				key={`${receiver.UUID}_${i}`}
+				href={`/${receiver.ensHandle || receiver.address}`}
+				className={'h-full w-full'}>
+				<div
+					className={'box-100 group mr-4 h-full  w-[20rem] overflow-hidden !rounded-xl bg-cover bg-center p-2 transition-all duration-500 ease-in-out hover:p-0'}
+					style={{backgroundImage: `url(${cover})`}}>
+					<div className={'box-0 h-full !rounded-lg p-4 transition-all duration-500 ease-in-out group-hover:!rounded-[11px] group-hover:p-6'}>
+						<div className={'flex items-center justify-center'}>
+							<Avatar
+								address={toAddress(receiver.address)}
+								src={receiver.avatar} />
+						</div>
+						<div className={'flex items-center justify-center'}>
+							<h1 className={'flex flex-row items-center pt-2 text-xl capitalize tracking-tight text-neutral-900 md:text-2xl'}>
+								{receiver.name}
+							</h1>
+						</div>
+						<div className={'flex items-center justify-center'}>
+							<p className={'font-number text-center text-xxs font-normal tracking-normal text-neutral-400 md:text-xs'}>
+								{truncateHex(receiver.address, 4)}
+							</p>
+						</div>
+						<div className={'flex items-center justify-center'}>
+							<div className={'font-number flex flex-row items-center justify-center pt-4 text-center text-xxs font-normal tracking-normal text-neutral-400 md:text-xs'}>
+								{receiver.uniqueGivers}
+								<svg
+									xmlns={'http://www.w3.org/2000/svg'}
+									viewBox={'0 0 512 512'}
+									className={'ml-1 h-3 w-3'}><path d={'M244 130.6l-12-13.5-4.2-4.7c-26-29.2-65.3-42.8-103.8-35.8c-53.3 9.7-92 56.1-92 110.3v3.5c0 32.3 13.4 63.1 37.1 85.1L253 446.8c.8 .7 1.9 1.2 3 1.2s2.2-.4 3-1.2L443 275.5c23.6-22 37-52.8 37-85.1v-3.5c0-54.2-38.7-100.6-92-110.3c-38.5-7-77.8 6.6-103.8 35.8l-4.2 4.7-12 13.5c-3 3.4-7.4 5.4-12 5.4s-8.9-2-12-5.4zm34.9-57.1C311 48.4 352.7 37.7 393.7 45.1C462.2 57.6 512 117.3 512 186.9v3.5c0 36-13.1 70.6-36.6 97.5c-3.4 3.8-6.9 7.5-10.7 11l-184 171.3c-.8 .8-1.7 1.5-2.6 2.2c-6.3 4.9-14.1 7.5-22.1 7.5c-9.2 0-18-3.5-24.8-9.7L47.2 299c-3.8-3.5-7.3-7.2-10.7-11C13.1 261 0 226.4 0 190.4v-3.5C0 117.3 49.8 57.6 118.3 45.1c40.9-7.4 82.6 3.2 114.7 28.4c6.7 5.3 13 11.1 18.7 17.6l4.2 4.7 4.2-4.7c4.2-4.7 8.6-9.1 13.3-13.1c1.8-1.5 3.6-3 5.4-4.5z'} fill={'currentcolor'}/>
+								</svg>
+							</div>
+						</div>
+						<p className={'mt-2 line-clamp-3 text-center text-sm text-neutral-500 md:mt-4'}>
+							{receiver?.description || `${receiver.name} hasn’t written anything yet. must be shy...`}
+						</p>
+					</div>
+				</div>
+			</Link>
+		);
+	}
 
 	return (
 		<div>
@@ -226,70 +328,33 @@ function	Home(): ReactElement {
 
 			<div className={'relative mt-16 w-full overflow-x-hidden'}>
 				<div className={'ml-[-10vw] flex w-[120vw] items-center justify-center'}>
-					<div className={'mb-44'}>
-						<FlipMove
-							duration={500}
-							easing={'ease-in-out'}
-							className={'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'}>
-							{randomOrderedData?.map((receiver, i): ReactElement => {
-								let {cover} = receiver;
-								if (cover.startsWith('https://gateway.pinata.cloud/ipfs')) {
-									cover = cover.replace('https://gateway.pinata.cloud/ipfs', 'https://ipfs.io/ipfs');
-								}
-								if (cover.startsWith('ipfs://')) {
-									cover = cover.replace('ipfs://', 'https://ipfs.io/ipfs/');
-								}
-								return (
-									<Link
-										key={receiver.UUID}
-										href={`/${receiver.ensHandle || receiver.address}`}
-										className={`h-full w-full ${
-											i < 6 ? 'hidden sm:hidden md:hidden lg:hidden xl:flex' :
-												i < 12 ? 'hidden sm:hidden md:hidden lg:flex' :
-													i < 15 ? 'hidden sm:hidden md:flex' :
-														i < 16 ? 'hidden sm:flex' :
-															i < 18 ? 'flex' : ''
-										}`}>
-										<div
-											className={'box-100 group h-full w-full overflow-hidden !rounded-xl bg-cover bg-center p-2 transition-all duration-500 ease-in-out hover:p-0'}
-											style={{backgroundImage: `url('${cover}')`}}>
+					<div className={'mb-44 w-full space-y-4'}>
+						<Marquee
+							speed={20}
+							onCycleComplete={(): void => console.log('he')}>
+							{randomOrderedData
+								.filter((_, i): boolean => i < 10)
+								.map((receiver, i): ReactElement => renderProfileBox(receiver, i))}
+						</Marquee>
+						<Marquee
+							direction={'right'}
+							speed={20}
+							onCycleComplete={(): void => console.log('he')}>
+							{randomOrderedData
+								.filter((_, i): boolean => i >= 10 && i < 20)
+								.map((receiver, i): ReactElement => renderProfileBox(receiver, i))}
 
-											<div className={'box-0 h-full !rounded-lg p-4 transition-all duration-500 ease-in-out group-hover:!rounded-[11px] group-hover:p-6'}>
-												<div className={'flex items-center justify-center'}>
-													<Avatar
-														address={toAddress(receiver.address)}
-														src={receiver.avatar} />
-												</div>
-												<div className={'flex items-center justify-center'}>
-													<h1 className={'flex flex-row items-center pt-2 text-xl capitalize tracking-tight text-neutral-900 md:text-2xl'}>
-														{receiver.name}
-													</h1>
-												</div>
-												<div className={'flex items-center justify-center'}>
-													<p className={'font-number text-center text-xxs font-normal tracking-normal text-neutral-400 md:text-xs'}>
-														{truncateHex(receiver.address, 4)}
-													</p>
-												</div>
-												<div className={'flex items-center justify-center'}>
-													<div className={'font-number flex flex-row items-center justify-center pt-4 text-center text-xxs font-normal tracking-normal text-neutral-400 md:text-xs'}>
-														{receiver.uniqueGivers}
-														<svg
-															xmlns={'http://www.w3.org/2000/svg'}
-															viewBox={'0 0 512 512'}
-															className={'ml-1 h-3 w-3'}><path d={'M244 130.6l-12-13.5-4.2-4.7c-26-29.2-65.3-42.8-103.8-35.8c-53.3 9.7-92 56.1-92 110.3v3.5c0 32.3 13.4 63.1 37.1 85.1L253 446.8c.8 .7 1.9 1.2 3 1.2s2.2-.4 3-1.2L443 275.5c23.6-22 37-52.8 37-85.1v-3.5c0-54.2-38.7-100.6-92-110.3c-38.5-7-77.8 6.6-103.8 35.8l-4.2 4.7-12 13.5c-3 3.4-7.4 5.4-12 5.4s-8.9-2-12-5.4zm34.9-57.1C311 48.4 352.7 37.7 393.7 45.1C462.2 57.6 512 117.3 512 186.9v3.5c0 36-13.1 70.6-36.6 97.5c-3.4 3.8-6.9 7.5-10.7 11l-184 171.3c-.8 .8-1.7 1.5-2.6 2.2c-6.3 4.9-14.1 7.5-22.1 7.5c-9.2 0-18-3.5-24.8-9.7L47.2 299c-3.8-3.5-7.3-7.2-10.7-11C13.1 261 0 226.4 0 190.4v-3.5C0 117.3 49.8 57.6 118.3 45.1c40.9-7.4 82.6 3.2 114.7 28.4c6.7 5.3 13 11.1 18.7 17.6l4.2 4.7 4.2-4.7c4.2-4.7 8.6-9.1 13.3-13.1c1.8-1.5 3.6-3 5.4-4.5z'} fill={'currentcolor'}/>
-														</svg>
-													</div>
-												</div>
-												<p className={'mt-2 line-clamp-3 text-sm text-neutral-500 md:mt-4'}>
-													{receiver?.description || `${receiver.name} hasn’t written anything yet. must be shy...`}
-												</p>
-											</div>
-										</div>
-									</Link>
-								);
-							})}
-						</FlipMove>
-
+						</Marquee>
+						<div className={'hidden sm:flex '}>
+							<Marquee
+								direction={'left'}
+								speed={20}
+								onCycleComplete={(): void => console.log('he')}>
+								{randomOrderedData
+									.filter((_, i): boolean => i >= 20 && i < 30)
+									.map((receiver, i): ReactElement => renderProfileBox(receiver, i))}
+							</Marquee>
+						</div>
 					</div>
 				</div>
 			</div>
