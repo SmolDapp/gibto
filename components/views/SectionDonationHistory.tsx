@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import {ImageWithFallback} from 'components/common/ImageWithFallback';
 import IconChevronBoth from 'components/icons/IconChevronBoth';
 import IconCircleCross from 'components/icons/IconCircleCross';
@@ -81,13 +82,11 @@ function	SectionDonationHistory({donateHistory, isLoading, name}: {
 							<div className={'yearn--table-data-section-item md:col-span-6'}>
 								<p className={'text-start text-xs leading-5 text-neutral-400'}>{'From'}</p>
 								<b className={'yearn--table-data-section-item-value font-number'}>
-									<a
-										href={`${chains.get(donation.chainID)?.block_explorer || 'https://etherscan.io'}/address/${donation.txHash}`}
-										target={'_blank'}
-										rel={'noreferrer'}
+									<Link
+										href={`/${donation.from}`}
 										className={'hover:underline'}>
 										{toAddress(donation.from) === toAddress(address) ? 'You' : (donation.fromENS || donation.from)}
-									</a>
+									</Link>
 								</b>
 							</div>
 
