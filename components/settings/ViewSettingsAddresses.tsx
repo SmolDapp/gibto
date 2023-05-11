@@ -20,9 +20,11 @@ function ViewSettingsAddresses(props: TReceiverProps): ReactElement {
 		set_isSaving(true);
 		try {
 			const signer = await provider.getSigner();
-			const signature = await signer.signMessage(
-				Object.entries(fields.addresses).map(([key, value]): string => `${key}: ${value}`).join(',')
-			);
+			const message = Object.entries(PossibleNetworks)
+				.filter(([, value]): boolean => value.label in fields.addresses)
+				.filter(([, value]): boolean => (fields.addresses as never)[value.label] !== '')
+				.map(([, value]): string => `${value.label}: ${(fields.addresses as never)[value.label]}`).join(',');
+			const signature = await signer.signMessage(message);
 			await axios.put(`${process.env.BASE_API_URI}/addresses/${toAddress(address)}`, {
 				addresses: fields.addresses,
 				address: toAddress(address),
