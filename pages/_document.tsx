@@ -51,7 +51,7 @@ class MyDocument extends Document {
 					<link href={'https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap'} rel={'stylesheet'} />
 					<script dangerouslySetInnerHTML={{__html: modeScript}} />
 				</Head>
-				<body className={'bg-neutral-0 transition-colors duration-150'}>
+				<body className={'transition-colors duration-150'}>
 					<PatternBackground />
 					<Main />
 					<NextScript />

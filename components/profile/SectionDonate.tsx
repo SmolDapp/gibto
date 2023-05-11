@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
-import CardWithIcon from 'components/CardWithIcon';
-import ComboboxAddressInput from 'components/ComboboxAddressInput';
+import CardWithIcon from 'components/common/CardWithIcon';
+import ComboboxAddressInput from 'components/common/ComboboxAddressInput';
 import IconMessage from 'components/icons/IconMessage';
 import IconMessageCheck from 'components/icons/IconMessageCheck';
 import {useWallet} from 'contexts/useWallet';
@@ -10,21 +10,20 @@ import {sendEther} from 'utils/actions/sendEth';
 import {transfer} from 'utils/actions/transferERC20';
 import notify from 'utils/notifier';
 import cowswapTokenList from 'utils/tokenLists.json';
+import {PossibleNetworks} from 'utils/types';
 import axios from 'axios';
 import {useMountEffect, useUpdateEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
-import IconSettings from '@yearn-finance/web-lib/icons/IconSettings';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS, WETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
 import {toNormalizedBN, Zero} from '@yearn-finance/web-lib/utils/format.bigNumber';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
-import ModalDonateSettings from './ModalDonateSettings';
-import ModalMessage from './ModalMessage';
+import ModalMessage from '../modals/ModalMessage';
 
 import type {TTokenInfo, TTokenList} from 'contexts/useTokenList';
 import type {TUseBalancesTokens} from 'hooks/useBalances';
@@ -140,6 +139,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		decimals: 18,
 		logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
 	});
+
+	const currentNetworkAddress = (props.addresses as never)[PossibleNetworks[safeChainID].label];
 
 	useUpdateEffect((): void => {
 		if (safeChainID) {
@@ -348,10 +349,10 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 								!isActive ||
 								(amountToSend?.raw || Zero)?.isZero() ||
 								(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero) ||
-								!(props.networks.includes(safeChainID))
+								(isZeroAddress(currentNetworkAddress))
 							}
 							onClick={onDonate}>
-							{props.networks.includes(safeChainID) ? 'Gib' : 'Gib disabled for this network'}
+							{isZeroAddress(currentNetworkAddress) ? 'Gib disabled for this network' : 'Gib'}
 						</Button>
 						<Button
 							variant={'light'}
@@ -387,28 +388,15 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 }
 
 function SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
-	const [isOpen, set_isOpen] = useState(false);
-
 	return (
 		<div className={'mb-20'}>
 			<div className={'flex flex-row items-center justify-between'}>
 				<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
 					{'Donate'}
 				</h2>
-				{props.isOwner && (
-					<button onClick={(): void => set_isOpen(true)}>
-						<IconSettings
-							className={'transition-color h-4 w-4 text-neutral-400 hover:text-neutral-900'} />
-					</button>
-				)}
 			</div>
 
 			<DonateBox {...props} />
-			<ModalDonateSettings
-				networks={props.networks}
-				mutate={props.mutate}
-				isOpen={isOpen}
-				set_isOpen={set_isOpen} />
 		</div>
 	);
 }

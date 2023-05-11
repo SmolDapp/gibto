@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 import type {ReactElement} from 'react';
 
-function Cover({src}: {src: string}): ReactElement {
+function Cover({src, className}: {src: string, className?: string}): ReactElement {
 	const	URL = '/hero.jpg';
 	const	videoExtTypes = ['mp4', 'webm', 'ogg'];
 
@@ -21,7 +21,7 @@ function Cover({src}: {src: string}): ReactElement {
 	}, [src]);
 
 	return (
-		<div className={'absolute inset-0 z-0'}>
+		<div className={`absolute inset-0 z-0 ${className}`}>
 			{videoExtTypes.includes(sanitizedSrc.split('.').pop() || '') ? (
 				<video
 					className={'absolute inset-0 h-full w-full object-cover'}

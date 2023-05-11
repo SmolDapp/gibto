@@ -15,7 +15,7 @@ import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 import {getProvider, newEthCallProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 
-import {ImageWithFallback} from './common/ImageWithFallback';
+import {ImageWithFallback} from './ImageWithFallback';
 
 import type {TTokenInfo} from 'contexts/useTokenList';
 import type {BigNumber, providers} from 'ethers';

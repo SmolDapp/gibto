@@ -1,4 +1,5 @@
 import type {ReactElement} from 'react';
+import type {TNDict} from '@yearn-finance/web-lib/types';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type Maybe<T> = T | null | undefined;
@@ -13,6 +14,26 @@ export type TToken = {
 	value: string;
 	icon?: ReactElement;
 }
+
+export type TAddresses = {
+	eth?: string;
+	opt?: string;
+	bsc?: string;
+	gno?: string;
+	matic?: string;
+	ftm?: string;
+	arb?: string;
+}
+export type TNetworkData = {name: string, label: string};
+export const PossibleNetworks: TNDict<TNetworkData> = {
+	1: {name: 'Ethereum', label: 'eth'},
+	10: {name: 'Optimism', label: 'opt'},
+	56: {name: 'Binance Smart Chain', label: 'bsc'},
+	100: {name: 'Gnosis', label: 'gno'},
+	137: {name: 'Polygon', label: 'matic'},
+	250: {name: 'Fantom', label: 'ftm'},
+	42161: {name: 'Arbitrum', label: 'arb'}
+};
 
 export type TReceiverProps = {
 	UUID: string;
@@ -31,13 +52,13 @@ export type TReceiverProps = {
 	github: string;
 	reddit: string;
 	discord: string;
-	networks: number[];
 	isCreated: boolean;
 	isVerified: boolean;
 	isOwner: boolean;
 	uniqueGivers?: number;
 	identitySource: 'on-chain' | 'off-chain';
 	order?: number;
+	addresses: TAddresses;
 } & {mutate: () => void};
 
 export type TDonationsProps = {

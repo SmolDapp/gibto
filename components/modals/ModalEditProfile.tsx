@@ -1,6 +1,6 @@
 import React, {Fragment, useState} from 'react';
-import Avatar from 'components/Avatar';
 import Modal from 'components/common/Modal';
+import Avatar from 'components/profile/Avatar';
 import {ethers} from 'ethers';
 import {namehash} from 'ethers/lib/utils';
 import ENS_RESOLVER_ABI from 'utils/abi/ENSResolver.abi';
@@ -16,9 +16,8 @@ import type {Dispatch, ReactElement, SetStateAction} from 'react';
 import type {TReceiverProps} from 'utils/types';
 import type {TTxResponse} from '@yearn-finance/web-lib/utils/web3/transaction';
 
-function ModalEditProfile({identity, isOpen, set_isOpen}: {
+export function ProfileSettings({identity, set_isOpen}: {
 	identity: TReceiverProps,
-	isOpen: boolean,
 	set_isOpen: Dispatch<SetStateAction<boolean>>,
 }): ReactElement {
 	const	{address, provider, ens} = useWeb3();
@@ -333,19 +332,29 @@ function ModalEditProfile({identity, isOpen, set_isOpen}: {
 	}
 
 	return (
+		<Fragment>
+			<div className={'w-full md:w-3/4'}>
+				<b className={'text-base'}>{'Update your profile'}</b>
+				<p className={'pt-2 text-xs text-neutral-500 md:text-sm'}>
+					{'You are in control of your profile. You can update your name, avatar, and social media links. All of theses changes will be stored on-chain as ENS records. Unleash your digital identity!'}
+				</p>
+			</div>
+			{renderForm()}
+		</Fragment>
+	);
+}
+
+function ModalEditProfile(props: {
+	identity: TReceiverProps,
+	isOpen: boolean,
+	set_isOpen: Dispatch<SetStateAction<boolean>>,
+}): ReactElement {
+	return (
 		<Modal
 			className={'max-h-[80vh] max-w-sm overflow-x-hidden overflow-y-scroll md:max-h-[unset] md:max-w-5xl md:!p-0'}
-			isOpen={isOpen}
-			set_isOpen={(): void => set_isOpen(false)}>
-			<Fragment>
-				<div className={'w-full md:w-3/4'}>
-					<b className={'text-base'}>{'Update your profile'}</b>
-					<p className={'pt-2 text-xs text-neutral-500 md:text-sm'}>
-						{'You are in control of your profile. You can update your name, avatar, and social media links. All of theses changes will be stored on-chain as ENS records. Unleash your digital identity!'}
-					</p>
-				</div>
-				{renderForm()}
-			</Fragment>
+			isOpen={props.isOpen}
+			set_isOpen={(): void => props.set_isOpen(false)}>
+			<ProfileSettings {...props} />
 		</Modal>
 	);
 }

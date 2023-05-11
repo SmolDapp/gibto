@@ -1,6 +1,6 @@
 import React from 'react';
 import {NextSeo} from 'next-seo';
-import Profile from 'components/views/Profile';
+import Profile from 'components/profile/Profile';
 import meta from 'public/manifest.json';
 import axios from 'axios';
 import useSWR from 'swr';
@@ -22,15 +22,6 @@ function	Receiver(props: TReceiverProps): ReactElement {
 			refreshInterval: 0
 		}
 	);
-
-	// const {data: test} = useSWR<TReceiverProps>(
-	// 	`${process.env.BASE_API_URI}/givers/${toAddress(props.address)}`,
-	// 	baseFetcher, {
-	// 		revalidateOnFocus: false,
-	// 		revalidateOnReconnect: true,
-	// 		refreshInterval: 0
-	// 	}
-	// );
 
 	const	profile = {...(data || props)};
 	const	todayMidnightAsTimestamp = new Date().setHours(0, 0, 0, 0).valueOf();
