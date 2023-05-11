@@ -62,7 +62,7 @@ function ViewSettingsImages(props: TReceiverProps): ReactElement {
 					changes.cover = fields.cover;
 				}
 				const signer = await provider.getSigner();
-				const signature = await signer.signMessage(Object.entries(changes).map(([key, value]): string => `${key}: ${value}`).join('\n'));
+				const signature = await signer.signMessage(Object.entries(changes).map(([key, value]): string => `${key}: ${value}`).join(','));
 				const {data: profile} = await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
 					...changes,
 					type: 'profile',
