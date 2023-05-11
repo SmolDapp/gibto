@@ -21,7 +21,7 @@ function ModalAddresses({identity, isOpen, set_isOpen}: {
 						{`${identity.ensHandle || truncateHex(identity.address, 6)} accepts donations on the following networks on theses following addresses. When you donate, the correct address will be selected based on the network you are connected to.`}
 					</p>
 				</div>
-				<div className={'flex w-full flex-col space-x-2 space-y-0 pt-6 md:space-x-0 md:space-y-2'}>
+				<div className={'flex w-full flex-col space-y-2 pt-6'}>
 					{Object.entries(PossibleNetworks)
 						.filter(([, chain]): boolean => (identity.addresses as never)?.[chain?.label] || '')
 						.map(([chainID, chain]): ReactElement => (
@@ -29,7 +29,8 @@ function ModalAddresses({identity, isOpen, set_isOpen}: {
 								<div className={'flex w-full flex-row'}>
 									<p className={'font-number h-full w-full border-none bg-transparent text-sm focus:ring-0'}>
 										<span className={'text-neutral-400'}>{`${chain.label}: `}</span>
-										{`${(identity.addresses as never)?.[chain?.label] || ''}`}
+										<span className={'hidden md:inline'}>{`${(identity.addresses as never)?.[chain?.label] || ''}`}</span>
+										<span className={'inline md:hidden'}>{`${truncateHex((identity.addresses as never)?.[chain?.label] || '', 9)}`}</span>
 									</p>
 								</div>
 							</div>
