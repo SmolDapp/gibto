@@ -3,6 +3,7 @@ import CardWithIcon from 'components/common/CardWithIcon';
 import ComboboxAddressInput from 'components/common/ComboboxAddressInput';
 import IconMessage from 'components/icons/IconMessage';
 import IconMessageCheck from 'components/icons/IconMessageCheck';
+import ModalAddresses from 'components/modals/ModalAddresses';
 import {useWallet} from 'contexts/useWallet';
 import {ethers} from 'ethers';
 import {handleInputChangeEventValue} from 'utils';
@@ -161,7 +162,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			notify({
 				from: toAddress(address),
 				fromName: ens || truncateHex(toAddress(address), 4),
-				to: props.address,
+				to: currentNetworkAddress,
 				toName: props.ensHandle || truncateHex(toAddress(props.address), 4),
 				amountNormalized: formatAmount(amountToSend.normalized, 0, 6),
 				value: formatAmount(amountToSend.value, 0, 2),
@@ -170,7 +171,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			});
 			await axios.post(`${process.env.BASE_API_URI}/give/${toAddress(props.address)}`, {
 				from: address,
-				to: props.address,
+				toID: props.address,
+				to: currentNetworkAddress,
 				token: tokenToSend.address,
 				amount: amountToSend.raw.toString(),
 				txHash: txHash,
@@ -181,15 +183,15 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		} catch (e) {
 			console.error(e);
 		}
-	}, [address, amountToSend.normalized, amountToSend.raw, amountToSend.value, attachedMessage, chains, ens, props, tokenToSend.address, tokenToSend.symbol, chainID]);
+	}, [address, amountToSend.normalized, amountToSend.raw, amountToSend.value, attachedMessage, chains, ens, props, tokenToSend.address, tokenToSend.symbol, currentNetworkAddress, chainID]);
 
 	const onDonate = useCallback(async (): Promise<void> => {
-		if (isZeroAddress(toAddress(props.address))) {
+		if (isZeroAddress(toAddress(currentNetworkAddress))) {
 			return;
 		}
 		if (toAddress(tokenToSend.address) === ETH_TOKEN_ADDRESS) {
 			new Transaction(provider, sendEther, set_txStatus).populate(
-				toAddress(props.address),
+				toAddress(currentNetworkAddress),
 				amountToSend.raw,
 				balances[ETH_TOKEN_ADDRESS]?.raw
 			).onSuccess(async (receipt): Promise<void> => {
@@ -202,7 +204,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		} else {
 			new Transaction(provider, transfer, set_txStatus).populate(
 				toAddress(tokenToSend.address),
-				toAddress(props.address),
+				toAddress(currentNetworkAddress),
 				amountToSend.raw,
 				balances[tokenToSend.address]?.raw
 			).onSuccess(async (receipt): Promise<void> => {
@@ -218,7 +220,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 				set_amountToSend({...toNormalizedBN(0), value: 0});
 			}).perform();
 		}
-	}, [amountToSend.raw, balances, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
+	}, [amountToSend.raw, balances, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
 
 	const onComputeValueFromAmount = useCallback((amount: TNormalizedBN): void => {
 		const	value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
@@ -388,15 +390,30 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 }
 
 function SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
+	const {safeChainID} = useChainID();
+	const currentNetworkAddress = (props.addresses as never)[PossibleNetworks[safeChainID].label];
+	const [isOpen, set_isOpen] = useState<boolean>(false);
+
 	return (
 		<div className={'mb-20'}>
 			<div className={'flex flex-row items-center justify-between'}>
 				<h2 id={'donate'} className={'scroll-m-20 pb-4 text-xl text-neutral-500'}>
 					{'Donate'}
 				</h2>
+				<div>
+					<button
+						onClick={(): void => set_isOpen(true)}
+						className={'flex cursor-pointer items-center justify-center rounded border border-neutral-200 px-2 py-1 text-xxs text-neutral-400 transition-colors hover:bg-neutral-900 hover:text-neutral-0'}>
+						{`eth: ${truncateHex(currentNetworkAddress, 6)}`}
+					</button>
+				</div>
 			</div>
 
 			<DonateBox {...props} />
+			<ModalAddresses
+				identity={props}
+				isOpen={isOpen}
+				set_isOpen={set_isOpen} />
 		</div>
 	);
 }
