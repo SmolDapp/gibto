@@ -65,7 +65,7 @@ function	Receiver(props: TReceiverProps & AppProps): ReactElement {
 		return (
 			<div className={'h-full min-h-screen bg-neutral-50 pt-10'}>
 				<div className={'mx-auto mb-24 grid w-full max-w-5xl grid-cols-12 gap-6'}>
-					<aside className={'col-span-3'}>
+					<aside className={'col-span-12 md:col-span-3'}>
 						<div className={'box-0 sticky top-20 p-6'}>
 							<div className={'mb-5 flex flex-row items-center space-x-3 border-b border-neutral-200 pb-5'}>
 								<Avatar
@@ -80,7 +80,7 @@ function	Receiver(props: TReceiverProps & AppProps): ReactElement {
 									</p>
 								</span>
 							</div>
-							<menu className={'flex flex-col space-y-4'}>
+							<menu className={'grid grid-cols-2 gap-4 md:grid-cols-1'}>
 								<button
 									onClick={(): void => {
 										set_page('profile');
@@ -120,7 +120,7 @@ function	Receiver(props: TReceiverProps & AppProps): ReactElement {
 							</menu>
 						</div>
 					</aside>
-					<div className={'relative col-span-9 w-full'}>
+					<div className={'relative col-span-12 w-full md:col-span-9'}>
 						<AnimatePresence mode={'wait'}>
 							<motion.div
 								key={page}

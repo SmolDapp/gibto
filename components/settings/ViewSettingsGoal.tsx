@@ -69,7 +69,7 @@ function ViewSettingsGoal(props: Maybe<TGoal> & {mutate: VoidFunction}): ReactEl
 			<form
 				onSubmit={onSubmitForm}
 				className={'grid grid-cols-1 gap-6 pt-6 md:grid-cols-2'}>
-				<div className={'box-50 relative mx-auto flex w-full items-center justify-center py-10'}>
+				<div className={'box-50 relative col-span-2 mx-auto flex w-full items-center justify-center py-10 md:col-span-1'}>
 					<i className={'absolute left-4 top-2 text-xxs text-neutral-400'}>
 						{'Preview'}
 					</i>
