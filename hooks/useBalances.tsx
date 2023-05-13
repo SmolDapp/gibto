@@ -1,9 +1,9 @@
 import {useCallback, useMemo, useRef, useState} from 'react';
+import {useWeb3} from 'contexts/useWeb3';
 import {Contract} from 'ethcall';
 import axios from 'axios';
 import {useUpdateEffect} from '@react-hookz/web';
 import {useUI} from '@yearn-finance/web-lib/contexts/useUI';
-import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import ERC20_ABI from '@yearn-finance/web-lib/utils/abi/erc20.abi';
 import {isZeroAddress, toAddress} from '@yearn-finance/web-lib/utils/address';

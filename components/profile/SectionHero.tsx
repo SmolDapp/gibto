@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import Link from 'next/link';
+import {useWeb3} from 'contexts/useWeb3';
 import {motion} from 'framer-motion';
 import {Button} from '@yearn-finance/web-lib/components/Button';
-import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 
 import ModalEditProfile from '../modals/ModalEditProfile';

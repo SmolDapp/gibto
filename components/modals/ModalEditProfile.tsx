@@ -1,13 +1,13 @@
 import React, {Fragment, useState} from 'react';
 import Modal from 'components/common/Modal';
 import Avatar from 'components/profile/Avatar';
+import {useWeb3} from 'contexts/useWeb3';
 import {ethers} from 'ethers';
 import {namehash} from 'ethers/lib/utils';
 import ENS_RESOLVER_ABI from 'utils/abi/ENSResolver.abi';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
-import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 import {defaultTxStatus, handleTx, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';

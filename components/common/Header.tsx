@@ -2,8 +2,8 @@ import React, {Fragment, useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/router';
 import Logo from 'components/icons/logo';
+import {useWeb3} from 'contexts/useWeb3';
 import {Listbox, Transition} from '@headlessui/react';
-import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import IconChevronBottom from '@yearn-finance/web-lib/icons/IconChevronBottom';
@@ -88,13 +88,13 @@ function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): Reac
 					<>
 						<Listbox.Button
 							suppressHydrationWarning
-							className={'yearn--header-nav-item hidden flex-row items-center border-0 p-0 text-sm md:flex'}>
-							<div suppressHydrationWarning className={'relative flex flex-row items-center'}>
+							className={'yearn--header-nav-item flex flex-row items-center border-0 p-0 text-xs md:flex md:text-sm'}>
+							<div suppressHydrationWarning className={'relative flex flex-row items-center truncate whitespace-nowrap text-xs md:text-sm'}>
 								{currentNetwork?.label || 'Ethereum'}
 							</div>
-							<div className={'ml-2'}>
+							<div className={'ml-1 md:ml-2'}>
 								<IconChevronBottom
-									className={`h-5 w-4 transition-transform ${open ? '-rotate-180' : 'rotate-0'}`} />
+									className={`h-3 w-3 transition-transform md:h-5 md:w-4 ${open ? '-rotate-180' : 'rotate-0'}`} />
 							</div>
 						</Listbox.Button>
 						<Transition
@@ -147,6 +147,7 @@ function	WalletSelector(): ReactElement {
 	const	{options, isActive, address, ens, lensProtocolHandle, openLoginModal, onDesactivate, onSwitchChain} = useWeb3();
 	const	[walletIdentity, set_walletIdentity] = useState<string | undefined>(undefined);
 
+	console.warn({options, isActive, address, ens, lensProtocolHandle, openLoginModal, onDesactivate, onSwitchChain});
 	useEffect((): void => {
 		if (!isActive && address) {
 			set_walletIdentity('Invalid Network');
@@ -172,7 +173,7 @@ function	WalletSelector(): ReactElement {
 					openLoginModal();
 				}
 			}}>
-			<p suppressHydrationWarning className={'yearn--header-nav-item text-sm'}>
+			<p suppressHydrationWarning className={'yearn--header-nav-item !text-xs md:!text-sm'}>
 				{walletIdentity ? walletIdentity : (
 					<span>
 						<IconWallet
@@ -209,8 +210,10 @@ function	AppHeader(): ReactElement {
 				<header className={'yearn--header'}>
 					<Navbar currentPathName={pathname || ''} nav={nav} />
 					<div className={'flex w-1/3 items-center justify-center md:hidden'}>
-						<Logo className={'h-6 text-neutral-700'} />
-						<Link href={`/${ens || address}`} className={'ml-2 text-sm text-neutral-400 transition-colors hover:text-neutral-900'}>
+						<Link href={'/'}>
+							<Logo className={'h-6 text-neutral-700'} />
+						</Link>
+						<Link href={`/${ens || address}`} className={'ml-2 text-xs text-neutral-500 transition-colors hover:text-neutral-900'}>
 							{'My profile'}
 						</Link>
 					</div>

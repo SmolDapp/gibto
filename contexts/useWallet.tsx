@@ -1,10 +1,10 @@
 import React, {createContext, memo, useCallback, useContext, useMemo, useState} from 'react';
 import {useTokenList} from 'contexts/useTokenList';
+import {useWeb3} from 'contexts/useWeb3';
 import {useBalances} from 'hooks/useBalances';
 import {MATIC_TOKEN_ADDRESS} from 'utils';
 import defaultTokenList from 'utils/tokenLists.json';
 import {useLocalStorageValue, useMountEffect, useUpdateEffect} from '@react-hookz/web';
-import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';

@@ -1,9 +1,9 @@
 import React, {Fragment, useState} from 'react';
 import Modal from 'components/common/Modal';
+import {useWeb3} from 'contexts/useWeb3';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
-import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 
 import type {Dispatch, ReactElement, SetStateAction} from 'react';

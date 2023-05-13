@@ -1,9 +1,9 @@
 import React, {Fragment, useCallback, useEffect, useState} from 'react';
 import {GoalPreviewMin} from 'components/profile/GoalBox';
+import {useWeb3} from 'contexts/useWeb3';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
-import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 
