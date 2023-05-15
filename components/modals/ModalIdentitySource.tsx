@@ -1,9 +1,9 @@
 import React, {Fragment, useState} from 'react';
 import Modal from 'components/common/Modal';
-import {useWeb3} from 'contexts/useWeb3';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 
 import type {Dispatch, ReactElement, SetStateAction} from 'react';
@@ -18,13 +18,16 @@ function ModalIdentitySource({identity, isOpen, set_isOpen}: {
 	const	{toast} = yToast();
 	const	[isSaving, set_isSaving] = useState(false);
 
-	async function	onChangeIdentitySource(source: 'on-chain' | 'off-chain'): Promise<void> {
+	async function	onChangeIdentitySource(message: 'on-chain' | 'off-chain'): Promise<void> {
+		if (!provider) {
+			return;
+		}
 		try {
 			set_isSaving(true);
-			const signer = await provider.getSigner();
-			const signature = await signer.signMessage(source);
+			const signer = await provider.getWalletClient();
+			const signature = await signer.signMessage({message});
 			await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
-				identitySource: source,
+				identitySource: message,
 				type: 'identitySource',
 				address: toAddress(address),
 				signature

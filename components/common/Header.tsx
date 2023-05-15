@@ -2,8 +2,8 @@ import React, {Fragment, useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/router';
 import Logo from 'components/icons/logo';
-import {useWeb3} from 'contexts/useWeb3';
 import {Listbox, Transition} from '@headlessui/react';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import IconChevronBottom from '@yearn-finance/web-lib/icons/IconChevronBottom';
@@ -30,7 +30,7 @@ function	Navbar({nav, currentPathName}: TNavbar): ReactElement {
 					target={option.target}
 					href={option.path}>
 					<p className={`yearn--header-nav-item ${currentPathName === option.path ? 'active' : '' }`}>
-						{option.label}
+						{option?.label || 'Unknown'}
 					</p>
 				</Link>
 			))}
@@ -147,7 +147,6 @@ function	WalletSelector(): ReactElement {
 	const	{options, isActive, address, ens, lensProtocolHandle, openLoginModal, onDesactivate, onSwitchChain} = useWeb3();
 	const	[walletIdentity, set_walletIdentity] = useState<string | undefined>(undefined);
 
-	console.warn({options, isActive, address, ens, lensProtocolHandle, openLoginModal, onDesactivate, onSwitchChain});
 	useEffect((): void => {
 		if (!isActive && address) {
 			set_walletIdentity('Invalid Network');

@@ -9,12 +9,12 @@ import ViewSettingsGoal from 'components/settings/ViewSettingsGoal';
 import ViewSettingsImages from 'components/settings/ViewSettingsImages';
 import ViewSettingsProfile from 'components/settings/ViewSettingsProfile';
 import ViewSettingsSocials from 'components/settings/ViewSettingsSocials';
-import {useWeb3} from 'contexts/useWeb3';
 import {thumbnailVariants} from 'utils';
 import axios from 'axios';
 import useSWR from 'swr';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useMountEffect} from '@react-hookz/web';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 

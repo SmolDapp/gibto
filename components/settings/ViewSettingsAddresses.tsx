@@ -1,9 +1,9 @@
 import React, {Fragment, useCallback, useState} from 'react';
-import {useWeb3} from 'contexts/useWeb3';
 import {PossibleNetworks} from 'utils/types';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 
 import type {FormEvent, ReactElement} from 'react';
@@ -17,14 +17,17 @@ function ViewSettingsAddresses(props: TReceiverProps): ReactElement {
 
 	const onSubmitForm = useCallback(async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
+		if (!provider) {
+			return;
+		}
 		set_isSaving(true);
 		try {
-			const signer = await provider.getSigner();
+			const signer = await provider.getWalletClient();
 			const message = Object.entries(PossibleNetworks)
 				.filter(([, value]): boolean => value.label in fields.addresses)
 				.filter(([, value]): boolean => (fields.addresses as never)[value.label] !== '')
 				.map(([, value]): string => `${value.label}: ${(fields.addresses as never)[value.label]}`).join(',');
-			const signature = await signer.signMessage(message);
+			const signature = await signer.signMessage({message});
 			await axios.put(`${process.env.BASE_API_URI}/addresses/${toAddress(address)}`, {
 				addresses: fields.addresses,
 				address: toAddress(address),

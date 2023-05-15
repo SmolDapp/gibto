@@ -1,11 +1,10 @@
 import React, {useState} from 'react';
 import Link from 'next/link';
-import {useWeb3} from 'contexts/useWeb3';
 import {motion} from 'framer-motion';
 import {Button} from '@yearn-finance/web-lib/components/Button';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 
-import ModalEditProfile from '../modals/ModalEditProfile';
 import ModalIdentitySource from '../modals/ModalIdentitySource';
 import Cover from './Cover';
 import SectionGoal from './SectionGoal';
@@ -21,7 +20,6 @@ function SectionHero(props: TReceiverProps & {
 	isLoadingGoal: boolean,
 	mutateGoal: VoidFunction
 }): ReactElement {
-	const	[isOpen, set_isOpen] = useState(false);
 	const	[isOpenIdentity, set_isOpenIdentity] = useState(false);
 	const	{address} = useWeb3();
 
@@ -42,7 +40,6 @@ function SectionHero(props: TReceiverProps & {
 					}}>
 					<Link href={`/${props.ensHandle || props.address}/settings`}>
 						<Button
-						// onClick={(): void => set_isOpen(true)}
 							variant={'reverted'}
 							className={'h-8 border-neutral-200 text-xs !font-bold shadow-md'}>
 							{`Edit my ${props.identitySource === 'on-chain' ? 'ENS ': ''}profile`}
@@ -91,11 +88,6 @@ function SectionHero(props: TReceiverProps & {
 					</div>
 				</div>
 			</section>
-			<ModalEditProfile
-				key={props.identitySource}
-				identity={props}
-				isOpen={isOpen}
-				set_isOpen={set_isOpen} />
 			<ModalIdentitySource
 				identity={props}
 				isOpen={isOpenIdentity}

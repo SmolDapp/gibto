@@ -1,25 +1,25 @@
 import {useCallback, useMemo, useRef, useState} from 'react';
-import {useWeb3} from 'contexts/useWeb3';
-import {Contract} from 'ethcall';
+import {erc20ABI} from 'wagmi';
 import axios from 'axios';
 import {useUpdateEffect} from '@react-hookz/web';
+import {deserialize, multicall} from '@wagmi/core';
 import {useUI} from '@yearn-finance/web-lib/contexts/useUI';
-import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
-import ERC20_ABI from '@yearn-finance/web-lib/utils/abi/erc20.abi';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
+import AGGREGATE3_ABI from '@yearn-finance/web-lib/utils/abi/aggregate.abi';
 import {isZeroAddress, toAddress} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
+import {decodeAsBigInt} from '@yearn-finance/web-lib/utils/decoder';
+import {toBigInt} from '@yearn-finance/web-lib/utils/format';
 import * as format from '@yearn-finance/web-lib/utils/format';
-import {formatBN} from '@yearn-finance/web-lib/utils/format';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
-import * as providers from '@yearn-finance/web-lib/utils/web3/providers';
 
 import type {AxiosResponse} from 'axios';
-import type {Call, Provider} from 'ethcall';
-import type {BigNumber, ethers} from 'ethers';
 import type {TGetBatchBalancesResp} from 'pages/api/getBatchBalances';
 import type {DependencyList} from 'react';
-import type {TDefaultStatus} from '@yearn-finance/web-lib/hooks/types';
+import type {ContractFunctionConfig} from 'viem';
+import type {Connector} from 'wagmi';
 import type {TAddress, TDict, TNDict} from '@yearn-finance/web-lib/types';
+import type {TDefaultStatus} from '@yearn-finance/web-lib/types/hooks';
 
 /* 🔵 - Yearn Finance **********************************************************
 ** Request, Response and helpers for the useBalances hook.
@@ -28,16 +28,16 @@ export type	TMinBalanceData = {
 	symbol: string,
 	name: string,
 	decimals: number,
-	raw: BigNumber,
+	raw: bigint,
 	normalized: number,
 	force?: boolean
 }
 type	TDefaultReqArgs = {
 	chainID?: number,
-	provider?: ethers.providers.Provider,
+	provider?: Connector,
 }
 export type	TUseBalancesTokens = {
-	token: string,
+	token: TAddress,
 	decimals: number,
 	symbol: string,
 	name: string,
@@ -77,17 +77,17 @@ const		defaultStatus = {
 };
 
 async function performCall(
-	ethcallProvider: Provider,
-	calls: Call[],
+	chainID: number,
+	calls: ContractFunctionConfig[],
 	tokens: TUseBalancesTokens[]
 ): Promise<[TDict<TMinBalanceData>, Error | undefined]> {
-	const	_data: TDict<TMinBalanceData> = {};
-	const	results = await ethcallProvider.tryAll(calls);
+	const _data: TDict<TMinBalanceData> = {};
+	const results = await multicall({contracts: calls as never[], chainId: chainID});
 
 	let		rIndex = 0;
 	for (const element of tokens) {
-		const	{token, symbol, name, decimals} = element;
-		const	balanceOf = results[rIndex++] as BigNumber;
+		const {token, symbol, name, decimals} = element;
+		const balanceOf = decodeAsBigInt(results[rIndex++]);
 		_data[toAddress(token)] = {
 			decimals: Number(decimals || 18),
 			symbol: symbol,
@@ -101,39 +101,28 @@ async function performCall(
 }
 
 async function getBalances(
-	provider: ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider,
-	fallBackProvider: ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider,
+	chainID: number,
 	address: TAddress,
 	tokens: TUseBalancesTokens[]
 ): Promise<[TDict<TMinBalanceData>, Error | undefined]> {
 	let		result: TDict<TMinBalanceData> = {};
-	const	currentProvider = provider;
-	const	calls = [];
-	const	ethcallProvider = await providers.newEthCallProvider(currentProvider);
-
+	const	calls: ContractFunctionConfig[] = [];
 	for (const element of tokens) {
 		const	{token} = element;
 		const	ownerAddress = address;
-		const	isEth = toAddress(token) === ETH_TOKEN_ADDRESS;
+		const	isEth = toAddress(token) === toAddress(ETH_TOKEN_ADDRESS);
 		if (isEth) {
-			calls.push(ethcallProvider.getEthBalance(ownerAddress));
+			calls.push({address: '0xcA11bde05977b3631167028862bE2a173976CA11', abi: AGGREGATE3_ABI, functionName: 'getEthBalance', args: [ownerAddress]});
 		} else {
-			const	tokenContract = new Contract(token, ERC20_ABI);
-			calls.push(tokenContract.balanceOf(ownerAddress));
+			calls.push({address: token, abi: erc20ABI, functionName: 'balanceOf', args: [ownerAddress]});
 		}
 	}
 
 	try {
-		const	[callResult] = await performCall(ethcallProvider, calls, tokens);
+		const [callResult] = await performCall(chainID, calls, tokens);
 		result = {...result, ...callResult};
 	} catch (_error) {
-		if (fallBackProvider) {
-			const	ethcallProviderOverride = await providers.newEthCallProvider(fallBackProvider);
-			const	[callResult] = await performCall(ethcallProviderOverride, calls, tokens);
-			result = {...result, ...callResult};
-		} else {
-			console.error(_error);
-		}
+		console.error(_error);
 	}
 	return [result, undefined];
 }
@@ -143,8 +132,7 @@ async function getBalances(
 ** This hook can be used to fetch balance information for any ERC20 tokens.
 **************************************************************************/
 export function	useBalances(props?: TUseBalancesReq): TUseBalancesRes {
-	const	{address: web3Address, isActive, provider} = useWeb3();
-	const	{chainID: web3ChainID} = useChainID();
+	const	{address: web3Address, isActive, provider, chainID: web3ChainID} = useWeb3();
 	const	{onLoadStart, onLoadDone} = useUI();
 	const	[nonce, set_nonce] = useState(0);
 	const	[status, set_status] = useState<TDefaultStatus>(defaultStatus);
@@ -164,7 +152,7 @@ export function	useBalances(props?: TUseBalancesReq): TUseBalancesRes {
 		data.current[chainID].address = toAddress(web3Address as string);
 
 		for (const [address, element] of Object.entries(newRawData)) {
-			element.raw = formatBN(element.raw);
+			element.raw = toBigInt(element.raw);
 			data.current[chainID].balances[address] = {
 				...data.current[chainID].balances[address],
 				...element
@@ -212,12 +200,7 @@ export function	useBalances(props?: TUseBalancesReq): TUseBalancesRes {
 		}
 
 		for (const chunkTokens of chunks) {
-			const	[newRawData, err] = await getBalances(
-				provider,
-				providers.getProvider(props?.chainID || web3ChainID || 1),
-				web3Address,
-				chunkTokens
-			);
+			const	[newRawData, err] = await getBalances((props?.chainID || web3ChainID || 1), web3Address, chunkTokens);
 			if (toAddress(web3Address as string) !== data?.current?.[web3ChainID]?.address) {
 				data.current[web3ChainID] = {
 					address: toAddress(web3Address as string),
@@ -271,12 +254,7 @@ export function	useBalances(props?: TUseBalancesReq): TUseBalancesRes {
 
 		const tokensAdded: TDict<TMinBalanceData> = {};
 		for (const chunkTokens of chunks) {
-			const	[newRawData, err] = await getBalances(
-				provider,
-				providers.getProvider(props?.chainID || web3ChainID || 1),
-				toAddress(web3Address as string),
-				chunkTokens
-			);
+			const	[newRawData, err] = await getBalances((props?.chainID || web3ChainID || 1), toAddress(web3Address as string), chunkTokens);
 			if (toAddress(web3Address as string) !== data?.current?.[web3ChainID]?.address) {
 				data.current[web3ChainID] = {
 					address: toAddress(web3Address as string),
@@ -327,12 +305,10 @@ export function	useBalances(props?: TUseBalancesReq): TUseBalancesRes {
 
 		const	tokens = JSON.parse(stringifiedTokens) || [];
 		const	chainID = props?.chainID || web3ChainID || 1;
-		console.log(`Fetching balances for ${tokens.length} tokens`);
-
 		axios.post('/api/getBatchBalances', {chainID, address: web3Address, tokens})
 			.then((res: AxiosResponse<TGetBatchBalancesResp>): void => {
 				console.log(`Fetched balances for ${tokens.length} tokens`);
-				updateBalancesCall(res.data.chainID, res.data.balances);
+				updateBalancesCall(res.data.chainID, deserialize(res.data.balances));
 			})
 			.catch((err): void => {
 				console.error(err);

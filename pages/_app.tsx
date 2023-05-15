@@ -3,7 +3,7 @@ import {Inter} from 'next/font/google';
 import AppWrapper from 'components/common/AppWrapper';
 import {TokenListContextApp} from 'contexts/useTokenList';
 import {WalletContextApp} from 'contexts/useWallet';
-import {WithYearn} from 'contexts/WithYearn';
+import {WithYearn} from '@yearn-finance/web-lib/contexts/WithYearn';
 
 import type {AppProps} from 'next/app';
 import type {ReactElement} from 'react';

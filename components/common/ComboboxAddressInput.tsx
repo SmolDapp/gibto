@@ -1,24 +1,22 @@
 import React, {Fragment, useState} from 'react';
 import Image from 'next/image';
+import {ImageWithFallback} from 'components/common/ImageWithFallback';
 import IconCheck from 'components/icons/IconCheck';
 import IconChevronBoth from 'components/icons/IconChevronBoth';
 import {useWallet} from 'contexts/useWallet';
-import {useWeb3} from 'contexts/useWeb3';
-import {Contract} from 'ethcall';
-import {isAddress} from 'ethers/lib/utils';
+import {isAddress} from 'viem';
+import {erc20ABI} from 'wagmi';
 import {Combobox, Transition} from '@headlessui/react';
 import {useAsync, useThrottledState, useUpdateEffect} from '@react-hookz/web';
+import {multicall} from '@wagmi/core';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
-import ERC20_ABI from '@yearn-finance/web-lib/utils/abi/erc20.abi';
 import {toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
+import {decodeAsNumber, decodeAsString} from '@yearn-finance/web-lib/utils/decoder';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
-import {getProvider, newEthCallProvider} from '@yearn-finance/web-lib/utils/web3/providers';
-
-import {ImageWithFallback} from './ImageWithFallback';
 
 import type {TTokenInfo} from 'contexts/useTokenList';
-import type {BigNumber, providers} from 'ethers';
 import type {Dispatch, ReactElement, SetStateAction} from 'react';
 import type {TAddress, TDict} from '@yearn-finance/web-lib/types';
 
@@ -80,25 +78,28 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 	const [isOpen, set_isOpen] = useThrottledState(false, 400);
 
 	const [{result: tokenData}, fetchTokenData] = useAsync(async function fetchToken(
-		_provider: providers.JsonRpcProvider,
 		_safeChainID: number,
 		_query: TAddress
 	): Promise<{name: string, symbol: string, decimals: number} | undefined> {
 		if (!isAddress(_query)) {
 			return (undefined);
-
 		}
-		const currentProvider = _safeChainID === 1 ? _provider || getProvider(1) : getProvider(1);
-		const ethcallProvider = await newEthCallProvider(currentProvider);
-		const erc20Contract = new Contract(_query, ERC20_ABI);
-
-		const calls = [erc20Contract.name(), erc20Contract.symbol(), erc20Contract.decimals()];
-		const [name, symbol, decimals] = await ethcallProvider.tryAll(calls) as [string, string, BigNumber];
-		return ({name, symbol, decimals: decimals.toNumber()});
+		const results = await multicall({
+			contracts: [
+				{address: _query, abi: erc20ABI, functionName: 'name'},
+				{address: _query, abi: erc20ABI, functionName: 'symbol'},
+				{address: _query, abi: erc20ABI, functionName: 'decimals'}
+			],
+			chainId: _safeChainID
+		});
+		const name = decodeAsString(results[0]);
+		const symbol = decodeAsString(results[1]);
+		const decimals = decodeAsNumber(results[2]);
+		return ({name, symbol, decimals});
 	}, undefined);
 
 	useUpdateEffect((): void => {
-		fetchTokenData.execute(provider, safeChainID, toAddress(query));
+		fetchTokenData.execute(safeChainID, toAddress(query));
 	}, [fetchTokenData, provider, safeChainID, query]);
 
 	const filteredDestinations = query === ''
@@ -215,7 +216,7 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 
 							) : (
 								filteredDestinations.filter((dest): boolean => {
-									return (balances?.[toAddress(dest.address)]?.raw?.gt(0) || false);
+									return ((balances?.[toAddress(dest.address)]?.raw > 0n) || false);
 								}).map((dest): ReactElement => (
 									<ComboboxOption key={dest.address} option={dest} />
 								))

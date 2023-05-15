@@ -1,9 +1,9 @@
 import React, {Fragment, useCallback, useEffect, useState} from 'react';
 import {GoalPreviewMin} from 'components/profile/GoalBox';
-import {useWeb3} from 'contexts/useWeb3';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 
@@ -32,14 +32,18 @@ function ViewSettingsGoal(props: Maybe<TGoal> & {mutate: VoidFunction}): ReactEl
 
 	const onSubmitForm = useCallback(async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
+		if (!provider) {
+			return;
+		}
 		set_isSaving(true);
 		try {
-			const signer = await provider.getSigner();
-			const signature = await signer.signMessage(JSON.stringify({
+			const message = JSON.stringify({
 				startDate: new Date(startDate).valueOf() / 1000,
 				endDate: new Date(endDate).valueOf() / 1000,
 				goalValue
-			}));
+			});
+			const signer = await provider.getWalletClient();
+			const signature = await signer.signMessage({message});
 			await axios.post(`${process.env.BASE_API_URI}/goal/${toAddress(address)}`, {
 				goal: {
 					startDate: new Date(startDate).valueOf() / 1000,

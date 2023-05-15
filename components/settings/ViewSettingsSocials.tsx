@@ -1,61 +1,72 @@
 import React, {Fragment, useState} from 'react';
-import {useWeb3} from 'contexts/useWeb3';
-import {ethers} from 'ethers';
-import {namehash} from 'ethers/lib/utils';
 import ENS_RESOLVER_ABI from 'utils/abi/ENSResolver.abi';
+import {encodeFunctionData} from 'viem';
+import {namehash} from 'viem/ens';
 import axios from 'axios';
+import {fetchEnsResolver, prepareWriteContract} from '@wagmi/core';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
-import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 import {defaultTxStatus, handleTx, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
+import type {Hex} from 'viem';
+import type {Connector} from 'wagmi';
 import type {TTxResponse} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 function ViewSettingsSocials(props: TReceiverProps): ReactElement {
-	const	{address, provider, ens} = useWeb3();
+	const	{address, provider, ens, chainID} = useWeb3();
 	const	{toast} = yToast();
 	const	[fields, set_fields] = useState<TReceiverProps>(props);
 	const	[txStatus, set_txStatus] = useState(defaultTxStatus);
 
 	async function	onSubmit(
-		provider: ethers.providers.JsonRpcProvider | ethers.providers.JsonRpcProvider,
+		provider: Connector,
 		{ens, fields}: {ens: string, fields: TReceiverProps}
 	): Promise<TTxResponse> {
-		const signer = await provider.getSigner();
-		const resolver = await getProvider(1).getResolver(ens);
-		const resolverIFace = new ethers.utils.Interface(ENS_RESOLVER_ABI);
+		const signer = await provider.getWalletClient();
+		const resolver = await fetchEnsResolver({name: ens});
 		const nameNode = namehash(ens);
-		const multicalls = [];
+		const multicalls: Hex[] = [];
 		if (props.discord !== fields.discord) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'com.discord', fields.discord]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'com.discord', fields.discord]}));
 		}
 		if (props.github !== fields.github) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'com.github', fields.github]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'com.github', fields.github]}));
 		}
 		if (props.reddit !== fields.reddit) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'com.reddit', fields.reddit]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'com.reddit', fields.reddit]}));
 		}
 		if (props.telegram !== fields.telegram) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'org.telegram', fields.telegram]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'org.telegram', fields.telegram]}));
 		}
 		if (props.twitter !== fields.twitter) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'com.twitter', fields.twitter]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'com.twitter', fields.twitter]}));
 		}
 		if (props.website !== fields.website) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'url', fields.website]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'url', fields.website]}));
 		}
 		if (props.email !== fields.email) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'email', fields.email]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'email', fields.email]}));
 		}
 
-		const contract = new ethers.Contract(toAddress(resolver?.address), ENS_RESOLVER_ABI, signer);
-		return await handleTx(contract.multicall(multicalls));
+		const config = await prepareWriteContract({
+			address: toAddress(resolver),
+			abi: ENS_RESOLVER_ABI,
+			functionName: 'multicall',
+			walletClient: signer,
+			chainId: chainID,
+			args: [multicalls]
+		});
+		return await handleTx(config);
 	}
 
 	async function	onSubmitRecords(): Promise<void> {
+		if (!provider) {
+			return;
+		}
 		if (props.identitySource === 'on-chain') {
 			if (!ens) {
 				return;
@@ -91,17 +102,15 @@ function ViewSettingsSocials(props: TReceiverProps): ReactElement {
 				if (props.email !== fields.email) {
 					changes.email = fields.email || ' ';
 				}
-				const signer = await provider.getSigner();
 				const message = Object.entries(changes).map(([key, value]): string => `${key}: ${value || ' '}`).join(',');
-				console.log(message);
-				const signature = await signer.signMessage(message);
-				const {data: profile} = await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
+				const signer = await provider.getWalletClient();
+				const signature = await signer.signMessage({message});
+				await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
 					...changes,
 					type: 'profile',
 					address: toAddress(address),
 					signature
 				});
-				console.log(profile);
 				toast({type: 'success', content: 'Profile updated!'});
 				props.mutate();
 				setTimeout((): void => set_txStatus(defaultTxStatus), 3000);

@@ -1,10 +1,10 @@
 import React from 'react';
 import {NextSeo} from 'next-seo';
 import Profile from 'components/profile/Profile';
-import {useWeb3} from 'contexts/useWeb3';
 import meta from 'public/manifest.json';
 import axios from 'axios';
 import useSWR from 'swr';
+import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 

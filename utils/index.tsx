@@ -1,8 +1,8 @@
-import {ethers} from 'ethers';
-import {isAddress} from 'ethers/lib/utils';
 import lensProtocol from 'utils/lens.tools';
+import {isAddress, zeroAddress} from 'viem';
+import {fetchEnsResolver} from '@wagmi/core';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
-import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
+import {parseUnits} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
 import type {TAddress} from '@yearn-finance/web-lib/types';
 import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
@@ -19,7 +19,7 @@ export function handleInputChangeEventValue(e: React.ChangeEvent<HTMLInputElemen
 	const	{valueAsNumber, value} = e.target;
 	const	amount = valueAsNumber;
 	if (isNaN(amount)) {
-		return ({raw: ethers.constants.Zero, normalized: ''});
+		return ({raw: 0n, normalized: ''});
 	}
 	if (amount === 0) {
 		let		amountStr = value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
@@ -32,24 +32,24 @@ export function handleInputChangeEventValue(e: React.ChangeEvent<HTMLInputElemen
 				if (amountParts.length === 2) {
 					amountStr = amountParts[0] + '.' + amountParts[1].slice(0, decimals);
 				}
-				const	raw = ethers.utils.parseUnits(amountStr || '0', decimals);
+				const	raw = parseUnits((amountStr || '0') as `${number}`, decimals || 18);
 				return ({raw: raw, normalized: amountStr || '0'});
 			}
 		}
 	}
 
-	const	raw = ethers.utils.parseUnits(amount.toFixed(decimals) || '0', decimals);
+	const	raw = parseUnits(amount.toFixed(decimals) || '0', decimals || 18);
 	return ({raw: raw, normalized: amount.toString() || '0'});
 }
 
 export async function checkENSValidity(ens: string): Promise<[TAddress, boolean]> {
-	const	resolvedName = await getProvider(1).resolveName(ens);
-	if (resolvedName) {
-		if (isAddress(resolvedName)) {
-			return [toAddress(resolvedName), true];
+	const resolvedAddress = await fetchEnsResolver({name: ens});
+	if (resolvedAddress) {
+		if (isAddress(resolvedAddress)) {
+			return [toAddress(resolvedAddress), true];
 		}
 	}
-	return [toAddress(ethers.constants.AddressZero), false];
+	return [zeroAddress, false];
 }
 
 export async function checkLensValidity(lens: string): Promise<[TAddress, boolean]> {
@@ -59,5 +59,5 @@ export async function checkLensValidity(lens: string): Promise<[TAddress, boolea
 			return [toAddress(resolvedName), true];
 		}
 	}
-	return [toAddress(ethers.constants.AddressZero), false];
+	return [zeroAddress, false];
 }
