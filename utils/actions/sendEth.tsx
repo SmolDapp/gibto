@@ -1,5 +1,6 @@
 
 import {waitForTransaction} from '@wagmi/core';
+import {toWagmiAddress} from '@yearn-finance/web-lib/utils/address';
 
 import type {BaseError} from 'viem';
 import type {Connector} from 'wagmi';
@@ -14,7 +15,7 @@ export async function	sendEther(
 ): Promise<TTxResponse> {
 	const	signer = await provider.getWalletClient();
 	try {
-		const transaction = await signer.sendTransaction({to, value});
+		const transaction = await signer.sendTransaction({to: toWagmiAddress(to), value});
 		const receipt = await waitForTransaction({
 			chainId: chainID,
 			hash: transaction

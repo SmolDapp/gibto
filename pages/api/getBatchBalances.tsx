@@ -1,8 +1,8 @@
 import {serialize} from 'wagmi';
 import {erc20ABI, multicall} from '@wagmi/core';
 import AGGREGATE3_ABI from '@yearn-finance/web-lib/utils/abi/aggregate.abi';
-import {toAddress} from '@yearn-finance/web-lib/utils/address';
-import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
+import {toAddress, toWagmiAddress} from '@yearn-finance/web-lib/utils/address';
+import {ETH_TOKEN_ADDRESS, MULTICALL3_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
 import {decodeAsBigInt} from '@yearn-finance/web-lib/utils/decoder';
 import {toNormalizedValue} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
@@ -28,9 +28,9 @@ async function getBatchBalances({
 		const	ownerAddress = address;
 		const	isEth = toAddress(token) === toAddress(ETH_TOKEN_ADDRESS);
 		if (isEth) {
-			calls.push({address: '0xcA11bde05977b3631167028862bE2a173976CA11', abi: AGGREGATE3_ABI, functionName: 'getEthBalance', args: [ownerAddress]});
+			calls.push({address: toWagmiAddress(MULTICALL3_ADDRESS), abi: AGGREGATE3_ABI, functionName: 'getEthBalance', args: [ownerAddress]});
 		} else {
-			calls.push({address: token, abi: erc20ABI, functionName: 'balanceOf', args: [ownerAddress]});
+			calls.push({address: toWagmiAddress(token), abi: erc20ABI, functionName: 'balanceOf', args: [ownerAddress]});
 		}
 	}
 	try {

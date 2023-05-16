@@ -1,5 +1,5 @@
 import {erc20ABI, prepareWriteContract} from '@wagmi/core';
-import {toAddress} from '@yearn-finance/web-lib/utils/address';
+import {toWagmiAddress} from '@yearn-finance/web-lib/utils/address';
 import {handleTx} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import type {Connector} from 'wagmi';
@@ -15,12 +15,12 @@ export async function	transfer(
 ): Promise<TTxResponse> {
 	const signer = await provider.getWalletClient();
 	const config = await prepareWriteContract({
-		address: toAddress(token),
+		address: toWagmiAddress(token),
 		abi: erc20ABI,
 		functionName: 'transfer',
 		walletClient: signer,
 		chainId: chainID,
-		args: [receiver, amount]
+		args: [toWagmiAddress(receiver), amount]
 	});
 	return await handleTx(config);
 }

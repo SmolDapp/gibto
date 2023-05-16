@@ -1,7 +1,7 @@
 import lensProtocol from 'utils/lens.tools';
-import {isAddress, zeroAddress} from 'viem';
+import {isAddress} from 'viem';
 import {fetchEnsResolver} from '@wagmi/core';
-import {toAddress} from '@yearn-finance/web-lib/utils/address';
+import {toAddress, zeroAddress} from '@yearn-finance/web-lib/utils/address';
 import {parseUnits} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
 import type {TAddress} from '@yearn-finance/web-lib/types';

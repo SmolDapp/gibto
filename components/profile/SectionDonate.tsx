@@ -19,7 +19,7 @@ import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
-import {parseUnits, toNormalizedBN, Zero} from '@yearn-finance/web-lib/utils/format';
+import {BigZero, parseUnits, toNormalizedBN} from '@yearn-finance/web-lib/utils/format';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
@@ -150,7 +150,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	const [price, set_price] = useState<TNDict<TDict<number>>>({});
 	const [isModalOpen, set_isModalOpen] = useState<boolean>(false);
 	const [attachedMessage, set_attachedMessage] = useState<string>('');
-	const [amountToSend, set_amountToSend] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0n), value: 0});
+	const [amountToSend, set_amountToSend] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0), value: 0});
 	const [tokenToSend, set_tokenToSend] = useState<TTokenInfo>({
 		address: toAddress(ETH_TOKEN_ADDRESS),
 		chainId: 1,
@@ -218,7 +218,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 					await onRegisterDonation(receipt.transactionHash);
 				}
 				await props.onDonateCallback();
-				set_amountToSend({...toNormalizedBN(0n), value: 0});
+				set_amountToSend({...toNormalizedBN(0), value: 0});
 			}).perform();
 		} else {
 			new Transaction(provider, transfer, set_txStatus).populate(
@@ -236,7 +236,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 					symbol: tokenToSend.symbol,
 					name: tokenToSend.name
 				});
-				set_amountToSend({...toNormalizedBN(0n), value: 0});
+				set_amountToSend({...toNormalizedBN(0), value: 0});
 			}).perform();
 		}
 	}, [amountToSend.raw, chainID, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
@@ -249,7 +249,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	const onComputeAmountFromValue = useCallback((value: number): void => {
 		const amountNormalized = value / price[safeChainID][tokenToSend.address];
 		const amountAsBN = parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
-		set_amountToSend({...toNormalizedBN(amountAsBN, tokenToSend.decimals), value});
+		set_amountToSend({...toNormalizedBN(amountAsBN.toString(), tokenToSend.decimals), value});
 	}, [price, safeChainID, tokenToSend.address, tokenToSend.decimals]);
 
 	const onRefreshPrice = useCallback(async (): Promise<void> => {
@@ -273,7 +273,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			if ([10, 50, 100].includes(Number(formatAmount(newAmount.value, 2, 2)))) {
 				const amountNormalized = newAmount.value / Number(response?.data?.[toAddress(tokenAddress).toLowerCase()]?.usd || 0);
 				const amountAsBN = parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
-				const normalizedBNAmount = toNormalizedBN(amountAsBN, tokenToSend.decimals);
+				const normalizedBNAmount = toNormalizedBN(amountAsBN.toString(), tokenToSend.decimals);
 				newAmount.normalized = normalizedBNAmount.normalized;
 				newAmount.raw = normalizedBNAmount.raw;
 			} else {
@@ -368,8 +368,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 							isBusy={txStatus.pending}
 							isDisabled={
 								!isActive ||
-								((amountToSend?.raw || Zero) === 0n) ||
-								((amountToSend?.raw || Zero) > (balances?.[toAddress(tokenToSend.address)]?.raw || Zero)) ||
+								((amountToSend?.raw || BigZero) === 0n) ||
+								((amountToSend?.raw || BigZero) > (balances?.[toAddress(tokenToSend.address)]?.raw || BigZero)) ||
 								(isZeroAddress(currentNetworkAddress))
 							}
 							onClick={onDonate}>
