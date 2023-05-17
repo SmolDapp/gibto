@@ -210,7 +210,6 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		}
 		if (toAddress(tokenToSend.address) === toAddress(ETH_TOKEN_ADDRESS)) {
 			new Transaction(provider, sendEther, set_txStatus).populate(
-				chainID,
 				toAddress(currentNetworkAddress),
 				amountToSend.raw
 			).onSuccess(async (receipt): Promise<void> => {
@@ -222,7 +221,6 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			}).perform();
 		} else {
 			new Transaction(provider, transfer, set_txStatus).populate(
-				chainID,
 				toAddress(tokenToSend.address),
 				toAddress(currentNetworkAddress),
 				amountToSend.raw
@@ -239,7 +237,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 				set_amountToSend({...toNormalizedBN(0), value: 0});
 			}).perform();
 		}
-	}, [amountToSend.raw, chainID, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
+	}, [amountToSend.raw, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
 
 	const onComputeValueFromAmount = useCallback((amount: TNormalizedBN): void => {
 		const	value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];

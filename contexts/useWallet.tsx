@@ -120,7 +120,6 @@ export const WalletContextApp = memo(function WalletContextApp({children}: {chil
 		}
 	}, [isActive, onLoadExtraTokens]);
 
-
 	/* 🔵 - Yearn Finance ******************************************************
 	**	Setup and render the Context provider to use in the app.
 	***************************************************************************/

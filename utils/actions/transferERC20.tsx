@@ -8,12 +8,12 @@ import type {TTxResponse} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 export async function	transfer(
 	provider: Connector,
-	chainID: number,
 	token: TAddress,
 	receiver: TAddress,
 	amount: bigint
 ): Promise<TTxResponse> {
 	const signer = await provider.getWalletClient();
+	const chainID = await provider.getChainId();
 	const config = await prepareWriteContract({
 		address: toWagmiAddress(token),
 		abi: erc20ABI,

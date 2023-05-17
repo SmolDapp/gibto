@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {useRouter} from 'next/router';
 import Logo from 'components/icons/logo';
 import {Listbox, Transition} from '@headlessui/react';
+import {useMountEffect} from '@react-hookz/web';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
@@ -22,6 +23,12 @@ export type THeader = {
 }
 
 function	Navbar({nav, currentPathName}: TNavbar): ReactElement {
+	const [isClient, set_isClient] = useState<boolean>(false);
+	useMountEffect((): void => set_isClient(true));
+
+	if (!isClient) {
+		return <Fragment />;
+	}
 	return (
 		<nav className={'yearn--nav'}>
 			{nav.map((option): ReactElement => (
@@ -70,7 +77,7 @@ function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): Reac
 		return (
 			<button
 				suppressHydrationWarning
-				onClick={(): void => onSwitchChain(supportedNetworks[0].value, true)}
+				onClick={(): void => onSwitchChain(supportedNetworks[0].value)}
 				className={'yearn--header-nav-item mr-4 hidden cursor-pointer flex-row items-center border-0 p-0 text-sm hover:!text-neutral-500 md:flex'}>
 				<div suppressHydrationWarning className={'relative flex flex-row items-center'}>
 					{'Invalid Network'}
@@ -83,7 +90,7 @@ function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): Reac
 		<div className={'relative z-50 mr-4'}>
 			<Listbox
 				value={safeChainID}
-				onChange={(value: any): void => onSwitchChain(value.value, true)}>
+				onChange={(value: any): void => onSwitchChain(value.value)}>
 				{({open}): ReactElement => (
 					<>
 						<Listbox.Button
@@ -160,14 +167,13 @@ function	WalletSelector(): ReactElement {
 			set_walletIdentity(undefined);
 		}
 	}, [ens, lensProtocolHandle, address, isActive]);
-
 	return (
 		<div
 			onClick={(): void => {
 				if (isActive) {
 					onDesactivate();
 				} else if (!isActive && address) {
-					onSwitchChain(options?.defaultChainID || 1, true);
+					onSwitchChain(options?.defaultChainID || 1);
 				} else {
 					openLoginModal();
 				}
@@ -212,7 +218,10 @@ function	AppHeader(): ReactElement {
 						<Link href={'/'}>
 							<Logo className={'h-6 text-neutral-700'} />
 						</Link>
-						<Link href={`/${ens || address}`} className={'ml-2 text-xs text-neutral-500 transition-colors hover:text-neutral-900'}>
+						<Link
+							suppressHydrationWarning
+							href={`/${ens || address}`}
+							className={'ml-2 text-xs text-neutral-500 transition-colors hover:text-neutral-900'}>
 							{'My profile'}
 						</Link>
 					</div>

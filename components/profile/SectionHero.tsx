@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import Link from 'next/link';
 import {motion} from 'framer-motion';
+import {useMountEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
@@ -20,11 +21,14 @@ function SectionHero(props: TReceiverProps & {
 	isLoadingGoal: boolean,
 	mutateGoal: VoidFunction
 }): ReactElement {
-	const	[isOpenIdentity, set_isOpenIdentity] = useState(false);
-	const	{address} = useWeb3();
+	const [isClient, set_isClient] = useState<boolean>(false);
+	const [isOpenIdentity, set_isOpenIdentity] = useState(false);
+	const {address} = useWeb3();
+
+	useMountEffect((): void => set_isClient(true));
 
 	function renderEditButton(): ReactElement | null {
-		if (toAddress(address) === toAddress(props.address)) {
+		if (isClient && toAddress(address) === toAddress(props.address)) {
 			return (
 				<motion.div
 					className={'absolute top-4 flex w-full items-center justify-center'}
