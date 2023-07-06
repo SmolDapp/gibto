@@ -11,6 +11,7 @@ import {GECKO_CHAIN_NAMES, NATIVE_WRAPPER_COINS} from 'utils/constants';
 import notify from 'utils/notifier';
 import cowswapTokenList from 'utils/tokenLists.json';
 import {PossibleNetworks} from 'utils/types';
+import {useNetwork} from 'wagmi';
 import axios from 'axios';
 import {useMountEffect, useUpdateEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
@@ -123,7 +124,7 @@ function	AmountToSend({token, amountToSend, onChange}: {
 type TOnDonateCallback = (toRefresh?: TUseBalancesTokens) => Promise<void>;
 function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
 	const {address, provider, isActive, ens, chainID} = useWeb3();
-	const chains = useChain();
+	const {chains} = useNetwork();
 	const {safeChainID} = useChainID();
 	const {balances} = useWallet();
 	const [txStatus, set_txStatus] = useState(defaultTxStatus);
@@ -147,8 +148,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			set_tokenToSend({
 				address: toAddress(ETH_TOKEN_ADDRESS),
 				chainId: safeChainID,
-				name: chains.getCurrent()?.coin || 'Ether',
-				symbol: chains.getCurrent()?.coin || 'ETH',
+				name: chains.find((e): boolean => e.id === safeChainID)?.nativeCurrency?.name || 'Ether',
+				symbol: chains.find((e): boolean => e.id === safeChainID)?.nativeCurrency?.symbol || 'ETH',
 				decimals: 18,
 				logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
 			});
@@ -156,7 +157,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	}, [safeChainID]);
 
 	const onRegisterDonation = useCallback(async (txHash: string): Promise<void> => {
-		const currentExplorer = chains.getCurrent()?.block_explorer;
+		const currentExplorer = chains.find((e): boolean => e.id === safeChainID)?.blockExplorers?.default?.url || 'https://etherscan.io';
+
 		try {
 			notify({
 				from: toAddress(address),
@@ -182,7 +184,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		} catch (e) {
 			console.error(e);
 		}
-	}, [address, amountToSend.normalized, amountToSend.raw, amountToSend.value, attachedMessage, chains, ens, props, tokenToSend.address, tokenToSend.symbol, currentNetworkAddress, chainID]);
+	}, [chains, safeChainID, address, ens, currentNetworkAddress, props, amountToSend.normalized, amountToSend.value, amountToSend.raw, tokenToSend.symbol, tokenToSend.address, chainID, attachedMessage]);
 
 	const onDonate = useCallback(async (): Promise<void> => {
 		if (!provider || isZeroAddress(toAddress(currentNetworkAddress))) {
