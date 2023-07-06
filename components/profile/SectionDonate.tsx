@@ -44,9 +44,9 @@ function	TokenToSend({tokenToSend, onChange}: {tokenToSend: TTokenInfo, onChange
 	**********************************************************************************************/
 	useMountEffect((): void => {
 		axios.all([axios.get('https://raw.githubusercontent.com/Migratooor/tokenLists/main/lists/1/yearn.json')]).then(axios.spread((yearnResponse): void => {
-			const	cowswapTokenListResponse = cowswapTokenList as TTokenList;
-			const	yearnTokenListResponse = yearnResponse.data as TTokenList;
-			const	possibleDestinationsTokens: TDict<TTokenInfo> = {};
+			const cowswapTokenListResponse = cowswapTokenList as TTokenList;
+			const yearnTokenListResponse = yearnResponse.data as TTokenList;
+			const possibleDestinationsTokens: TDict<TTokenInfo> = {};
 			possibleDestinationsTokens[ETH_TOKEN_ADDRESS] = {
 				address: toAddress(ETH_TOKEN_ADDRESS),
 				chainId: 1,
@@ -100,7 +100,7 @@ function	AmountToSend({token, amountToSend, onChange}: {
 	** amount in the state and triggers the debounced retrieval of the quote from the Cowswap API.
 	** It is set as callback to avoid unnecessary re-renders.
 	**********************************************************************************************/
-	const	onInputChange = useCallback((e: ChangeEvent<HTMLInputElement>): void => {
+	const onInputChange = useCallback((e: ChangeEvent<HTMLInputElement>): void => {
 		onChange(handleInputChangeEventValue(e, token?.decimals || 18));
 	}, [onChange, token?.decimals]);
 
@@ -156,7 +156,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	}, [safeChainID]);
 
 	const onRegisterDonation = useCallback(async (txHash: string): Promise<void> => {
-		const	currentExplorer = chains.getCurrent()?.block_explorer;
+		const currentExplorer = chains.getCurrent()?.block_explorer;
 		try {
 			notify({
 				from: toAddress(address),
@@ -222,7 +222,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	}, [amountToSend.raw, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
 
 	const onComputeValueFromAmount = useCallback((amount: TNormalizedBN): void => {
-		const	value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
+		const value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
 		set_amountToSend({...amount, value});
 	}, [price, safeChainID, tokenToSend.address]);
 
@@ -240,7 +240,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 
 		const response = await axios.get(`https://api.coingecko.com/api/v3/simple/token_price/${GECKO_CHAIN_NAMES[safeChainID] || 'ethereum'}?contract_addresses=${tokenAddress}&vs_currencies=usd&precision=6`);
 		set_price((prev): TNDict<TDict<number>> => {
-			const	newPrice = {...prev};
+			const newPrice = {...prev};
 			if (!newPrice[safeChainID]) {
 				newPrice[safeChainID] = {};
 			}
@@ -248,7 +248,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			return newPrice;
 		});
 		set_amountToSend((prev): TNormalizedBN & {value: number} => {
-			const	newAmount = {...prev};
+			const newAmount = {...prev};
 			//If a specific value is selected, we don't want to change it, so we only update the value to match the new price
 			if ([10, 50, 100].includes(Number(formatAmount(newAmount.value, 2, 2)))) {
 				const amountNormalized = newAmount.value / Number(response?.data?.[toAddress(tokenAddress).toLowerCase()]?.usd || 0);

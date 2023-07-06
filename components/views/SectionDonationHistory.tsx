@@ -4,9 +4,9 @@ import {ImageWithFallback} from 'components/common/ImageWithFallback';
 import IconChevronBoth from 'components/icons/IconChevronBoth';
 import IconCircleCross from 'components/icons/IconCircleCross';
 import IconSpinner from 'components/icons/IconSpinner';
+import {useNetwork} from 'wagmi';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
-import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import IconLinkOut from '@yearn-finance/web-lib/icons/IconLinkOut';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
@@ -20,7 +20,7 @@ function	SectionDonationHistory({donateHistory, isLoading, name}: {
 	donateHistory: TDonationsProps[],
 	isLoading: boolean,
 }): ReactElement {
-	const chains = useChain();
+	const {chains} = useNetwork();
 	const {address} = useWeb3();
 
 	if (isLoading && donateHistory.length === 0) {
@@ -96,7 +96,7 @@ function	SectionDonationHistory({donateHistory, isLoading, name}: {
 										{formatDuration((donation.time * 1000) - new Date().valueOf(), true)}
 									</p>
 									<a
-										href={`${chains.get(donation.chainID)?.block_explorer || 'https://etherscan.io'}/tx/${donation.txHash}`}
+										href={`${chains.find((e): boolean => e.id === donation.chainID)?.blockExplorers?.default?.url || 'https://etherscan.io'}/tx/${donation.txHash}`}
 										target={'_blank'}
 										rel={'noreferrer'}
 										className={'mx-2 text-neutral-400 transition-colors hover:text-neutral-900 md:mx-0'}>

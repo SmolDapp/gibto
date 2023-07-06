@@ -25,7 +25,12 @@ const config = createConfig({
 	publicClient,
 	webSocketPublicClient,
 	connectors: [
-		new SafeConnector({chains, options: {allowedDomains: [/gnosis-safe.io/, /app.safe.global/]}}),
+		new SafeConnector({
+			chains,
+			options: {
+				allowedDomains: [/gnosis-safe.io/, /app.safe.global/]
+			}
+		}),
 		new IFrameEthereumConnector({
 			chains: chains,
 			options: {}
