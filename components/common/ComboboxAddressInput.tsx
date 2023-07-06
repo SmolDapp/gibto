@@ -1,5 +1,4 @@
 import React, {Fragment, useState} from 'react';
-import Image from 'next/image';
 import {ImageWithFallback} from 'components/common/ImageWithFallback';
 import IconCheck from 'components/icons/IconCheck';
 import IconChevronBoth from 'components/icons/IconChevronBoth';
@@ -37,14 +36,12 @@ function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
 			{({selected: isSelected}): ReactElement => (
 				<div className={'flex w-full flex-row items-center space-x-4'}>
 					<div className={'h-6 w-6'}>
-						{(option?.logoURI || '') !== '' ? (
-							<Image
-								alt={''}
-								unoptimized
-								src={option?.logoURI}
-								width={24}
-								height={24} />
-						) : <div className={'h-6 w-6 rounded-full bg-neutral-0'} />}
+						<ImageWithFallback
+							alt={''}
+							unoptimized
+							src={option?.logoURI}
+							width={24}
+							height={24} />
 					</div>
 					<div className={'flex flex-col font-sans text-neutral-900'}>
 						<span>

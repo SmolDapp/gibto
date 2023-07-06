@@ -11,7 +11,6 @@ import {alchemyProvider} from 'wagmi/providers/alchemy';
 import {infuraProvider} from 'wagmi/providers/infura';
 import {publicProvider} from 'wagmi/providers/public';
 import {IFrameEthereumConnector} from '@yearn-finance/web-lib/utils/web3/ledgerConnector';
-import {getRPC} from '@yearn-finance/web-lib/utils/web3/providers';
 
 const {chains, publicClient, webSocketPublicClient} = configureChains(
 	[mainnet, optimism, polygon, polygonZkEvm, gnosis, fantom, arbitrum, localhost],
@@ -27,12 +26,20 @@ const config = createConfig({
 	webSocketPublicClient,
 	connectors: [
 		new SafeConnector({chains, options: {allowedDomains: [/gnosis-safe.io/, /app.safe.global/]}}),
-		new IFrameEthereumConnector({chains, options: {}}),
+		new IFrameEthereumConnector({
+			chains: chains,
+			options: {}
+		}),
 		new InjectedConnector({chains}),
 		new MetaMaskConnector({chains}),
-		new LedgerConnector({chains, options: {}}),
+		new LedgerConnector({
+			chains: chains,
+			options: {
+				walletConnectVersion: 2
+			}
+		}),
 		new WalletConnectConnector({
-			chains,
+			chains: chains,
 			options: {
 				projectId: process.env.WALLETCONNECT_PROJECT_ID || ''
 			}
@@ -40,7 +47,6 @@ const config = createConfig({
 		new CoinbaseWalletConnector({
 			chains,
 			options: {
-				jsonRpcUrl: getRPC(1),
 				appName: process.env.WEBSITE_TITLE as string
 			}
 		})

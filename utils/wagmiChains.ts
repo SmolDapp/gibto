@@ -38,7 +38,7 @@ export const polygon = {
 				...wPolygon.rpcUrls.default.http,
 				'https://polygon.llamarpc.com',
 				`https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-				process.env.RPC_URL_POLYGON_TENDERLY || 'https://1rpc.io/matic'
+				'https://1rpc.io/matic'
 			]
 		},
 		public: {
@@ -46,7 +46,7 @@ export const polygon = {
 				...wPolygon.rpcUrls.default.http,
 				'https://polygon.llamarpc.com',
 				`https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-				process.env.RPC_URL_POLYGON_TENDERLY || 'https://1rpc.io/matic'
+				'https://1rpc.io/matic'
 			]
 		}
 	}
