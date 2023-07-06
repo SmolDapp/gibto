@@ -48,6 +48,11 @@ module.exports = (phase) => withTM(withPWA({
 			250: 'https://rpc3.fantom.network' || process.env.RPC_URL_FANTOM,
 			42161: process.env.RPC_URL_ARBITRUM
 		},
+		ALCHEMY_KEY: process.env.ALCHEMY_KEY,
+		INFURA_PROJECT_ID: process.env.INFURA_PROJECT_ID,
+		OPENSEA_API_KEY: process.env.OPENSEA_API_KEY,
+		WALLETCONNECT_PROJECT_ID: process.env.WALLETCONNECT_PROJECT_ID,
+
 		TELEGRAM_BOT: process.env.TELEGRAM_BOT,
 		TELEGRAM_CHAT: process.env.TELEGRAM_CHAT,
 		// BASE_API_URI: 'http://localhost:8080'

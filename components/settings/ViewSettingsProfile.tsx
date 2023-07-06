@@ -1,51 +1,63 @@
 import React, {Fragment, useState} from 'react';
 import Avatar from 'components/profile/Avatar';
-import {ethers} from 'ethers';
-import {namehash} from 'ethers/lib/utils';
 import ENS_RESOLVER_ABI from 'utils/abi/ENSResolver.abi';
+import {encodeFunctionData} from 'viem';
+import {namehash} from 'viem/ens';
 import axios from 'axios';
+import {fetchEnsResolver, prepareWriteContract} from '@wagmi/core';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
-import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 import {defaultTxStatus, handleTx, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
+import type {Hex} from 'viem';
+import type {Connector} from 'wagmi';
 import type {TTxResponse} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 function ViewSettingsProfile(props: TReceiverProps): ReactElement {
-	const	{address, provider, ens} = useWeb3();
+	const	{address, provider, ens, chainID} = useWeb3();
 	const	{toast} = yToast();
 	const	[fields, set_fields] = useState<TReceiverProps>(props);
 	const	[txStatus, set_txStatus] = useState(defaultTxStatus);
 
 	async function	onSubmit(
-		provider: ethers.providers.JsonRpcProvider | ethers.providers.JsonRpcProvider,
+		provider: Connector,
 		{ens, fields}: {ens: string, fields: TReceiverProps}
 	): Promise<TTxResponse> {
-		const signer = await provider.getSigner();
-		const resolver = await getProvider(1).getResolver(ens);
-		const resolverIFace = new ethers.utils.Interface(ENS_RESOLVER_ABI);
+		const signer = await provider.getWalletClient();
+		const resolver = await fetchEnsResolver({name: ens});
 		const nameNode = namehash(ens);
-		const multicalls = [];
+		const multicalls: Hex[] = [];
 		if (props.avatar !== fields.avatar) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'avatar', fields.avatar]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'avatar', fields.avatar]}));
 		}
 		if (props.cover !== fields.cover) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'cover', fields.cover]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'cover', fields.cover]}));
 		}
 		if (props.description !== fields.description) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'description', fields.description]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'description', fields.description]}));
 		}
 		if (props.about !== fields.about) {
-			multicalls.push(resolverIFace.encodeFunctionData('setText', [nameNode, 'about', fields.about]));
+			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'about', fields.about]}));
 		}
-		const contract = new ethers.Contract(toAddress(resolver?.address), ENS_RESOLVER_ABI, signer);
-		return await handleTx(contract.multicall(multicalls));
+		const config = await prepareWriteContract({
+			address: toAddress(resolver),
+			abi: ENS_RESOLVER_ABI,
+			functionName: 'multicall',
+			walletClient: signer,
+			chainId: chainID,
+			args: [multicalls]
+		});
+		return await handleTx(config);
 	}
 	async function	onSubmitRecords(): Promise<void> {
+		if (!provider) {
+			return;
+		}
+
 		if (props.identitySource === 'on-chain') {
 			if (!ens) {
 				return;
@@ -72,15 +84,15 @@ function ViewSettingsProfile(props: TReceiverProps): ReactElement {
 				if (props.about !== fields.about) {
 					changes.about = fields.about;
 				}
-				const signer = await provider.getSigner();
-				const signature = await signer.signMessage(Object.entries(changes).map(([key, value]): string => `${key}: ${value}`).join(','));
-				const {data: profile} = await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
+				const message = Object.entries(changes).map(([key, value]): string => `${key}: ${value}`).join(',');
+				const signer = await provider.getWalletClient();
+				const signature = await signer.signMessage({message});
+				await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
 					...changes,
 					type: 'profile',
 					address: toAddress(address),
 					signature
 				});
-				console.log(profile);
 				toast({type: 'success', content: 'Profile updated!'});
 				props.mutate();
 				setTimeout((): void => set_txStatus(defaultTxStatus), 3000);

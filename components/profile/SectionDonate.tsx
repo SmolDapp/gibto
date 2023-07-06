@@ -5,13 +5,13 @@ import IconMessage from 'components/icons/IconMessage';
 import IconMessageCheck from 'components/icons/IconMessageCheck';
 import ModalAddresses from 'components/modals/ModalAddresses';
 import {useWallet} from 'contexts/useWallet';
-import {ethers} from 'ethers';
 import {handleInputChangeEventValue} from 'utils';
-import {sendEther} from 'utils/actions/sendEth';
-import {transfer} from 'utils/actions/transferERC20';
+import {transferERC20, transferEther} from 'utils/actions';
+import {GECKO_CHAIN_NAMES, NATIVE_WRAPPER_COINS} from 'utils/constants';
 import notify from 'utils/notifier';
 import cowswapTokenList from 'utils/tokenLists.json';
 import {PossibleNetworks} from 'utils/types';
+import {useNetwork} from 'wagmi';
 import axios from 'axios';
 import {useMountEffect, useUpdateEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
@@ -20,9 +20,9 @@ import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
-import {toNormalizedBN, Zero} from '@yearn-finance/web-lib/utils/format.bigNumber';
+import {parseUnits, toNormalizedBN} from '@yearn-finance/web-lib/utils/format';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
-import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
+import {defaultTxStatus} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import ModalMessage from '../modals/ModalMessage';
 
@@ -30,28 +30,8 @@ import type {TTokenInfo, TTokenList} from 'contexts/useTokenList';
 import type {TUseBalancesTokens} from 'hooks/useBalances';
 import type {ChangeEvent, Dispatch, ReactElement, SetStateAction} from 'react';
 import type {TReceiverProps} from 'utils/types';
-import type {TAddress, TDict, TNDict} from '@yearn-finance/web-lib/types';
-import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
-
-const GECKO_CHAIN_NAMES: TNDict<string> = {
-	1:     'ethereum',
-	10:    'optimistic-ethereum',
-	56:    'binance-smart-chain',
-	100:   'xdai',
-	137:   'polygon-pos',
-	250:   'fantom',
-	42161: 'arbitrum-one'
-};
-
-const NATIVE_WRAPPER_COINS: TNDict<TAddress> = {
-	1: toAddress('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'),
-	10: toAddress('0x4200000000000000000000000000000000000006'),
-	56: toAddress('0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'),
-	100: toAddress('0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d'),
-	137: toAddress('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'),
-	250: toAddress('0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83'),
-	42161: toAddress('0x82aF49447D8a07e3bd95BD0d56f35241523fBab1')
-};
+import type {TDict, TNDict} from '@yearn-finance/web-lib/types';
+import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format';
 
 function	TokenToSend({tokenToSend, onChange}: {tokenToSend: TTokenInfo, onChange: Dispatch<SetStateAction<TTokenInfo>>}): ReactElement {
 	const {getCurrent} = useChain();
@@ -65,11 +45,11 @@ function	TokenToSend({tokenToSend, onChange}: {tokenToSend: TTokenInfo, onChange
 	**********************************************************************************************/
 	useMountEffect((): void => {
 		axios.all([axios.get('https://raw.githubusercontent.com/Migratooor/tokenLists/main/lists/1/yearn.json')]).then(axios.spread((yearnResponse): void => {
-			const	cowswapTokenListResponse = cowswapTokenList as TTokenList;
-			const	yearnTokenListResponse = yearnResponse.data as TTokenList;
-			const	possibleDestinationsTokens: TDict<TTokenInfo> = {};
+			const cowswapTokenListResponse = cowswapTokenList as TTokenList;
+			const yearnTokenListResponse = yearnResponse.data as TTokenList;
+			const possibleDestinationsTokens: TDict<TTokenInfo> = {};
 			possibleDestinationsTokens[ETH_TOKEN_ADDRESS] = {
-				address: ETH_TOKEN_ADDRESS,
+				address: toAddress(ETH_TOKEN_ADDRESS),
 				chainId: 1,
 				name: getCurrent()?.coin || 'Ether',
 				symbol: getCurrent()?.coin || 'ETH',
@@ -121,7 +101,7 @@ function	AmountToSend({token, amountToSend, onChange}: {
 	** amount in the state and triggers the debounced retrieval of the quote from the Cowswap API.
 	** It is set as callback to avoid unnecessary re-renders.
 	**********************************************************************************************/
-	const	onInputChange = useCallback((e: ChangeEvent<HTMLInputElement>): void => {
+	const onInputChange = useCallback((e: ChangeEvent<HTMLInputElement>): void => {
 		onChange(handleInputChangeEventValue(e, token?.decimals || 18));
 	}, [onChange, token?.decimals]);
 
@@ -144,7 +124,7 @@ function	AmountToSend({token, amountToSend, onChange}: {
 type TOnDonateCallback = (toRefresh?: TUseBalancesTokens) => Promise<void>;
 function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
 	const {address, provider, isActive, ens, chainID} = useWeb3();
-	const chains = useChain();
+	const {chains} = useNetwork();
 	const {safeChainID} = useChainID();
 	const {balances} = useWallet();
 	const [txStatus, set_txStatus] = useState(defaultTxStatus);
@@ -153,7 +133,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	const [attachedMessage, set_attachedMessage] = useState<string>('');
 	const [amountToSend, set_amountToSend] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0), value: 0});
 	const [tokenToSend, set_tokenToSend] = useState<TTokenInfo>({
-		address: ETH_TOKEN_ADDRESS,
+		address: toAddress(ETH_TOKEN_ADDRESS),
 		chainId: 1,
 		name: 'Ether',
 		symbol: 'ETH',
@@ -161,15 +141,15 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
 	});
 
-	const currentNetworkAddress = (props.addresses as never)[PossibleNetworks[safeChainID].label];
+	const currentNetworkAddress = (props.addresses as never)[PossibleNetworks[safeChainID]?.label || 'Unknown'];
 
 	useUpdateEffect((): void => {
 		if (safeChainID) {
 			set_tokenToSend({
-				address: ETH_TOKEN_ADDRESS,
+				address: toAddress(ETH_TOKEN_ADDRESS),
 				chainId: safeChainID,
-				name: chains.getCurrent()?.coin || 'Ether',
-				symbol: chains.getCurrent()?.coin || 'ETH',
+				name: chains.find((e): boolean => e.id === safeChainID)?.nativeCurrency?.name || 'Ether',
+				symbol: chains.find((e): boolean => e.id === safeChainID)?.nativeCurrency?.symbol || 'ETH',
 				decimals: 18,
 				logoURI: `https://assets.smold.app/api/token/1/${ETH_TOKEN_ADDRESS}/logo-128.png`
 			});
@@ -177,7 +157,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	}, [safeChainID]);
 
 	const onRegisterDonation = useCallback(async (txHash: string): Promise<void> => {
-		const	currentExplorer = chains.getCurrent()?.block_explorer;
+		const currentExplorer = chains.find((e): boolean => e.id === safeChainID)?.blockExplorers?.default?.url || 'https://etherscan.io';
+
 		try {
 			notify({
 				from: toAddress(address),
@@ -203,82 +184,82 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		} catch (e) {
 			console.error(e);
 		}
-	}, [address, amountToSend.normalized, amountToSend.raw, amountToSend.value, attachedMessage, chains, ens, props, tokenToSend.address, tokenToSend.symbol, currentNetworkAddress, chainID]);
+	}, [chains, safeChainID, address, ens, currentNetworkAddress, props, amountToSend.normalized, amountToSend.value, amountToSend.raw, tokenToSend.symbol, tokenToSend.address, chainID, attachedMessage]);
 
 	const onDonate = useCallback(async (): Promise<void> => {
-		if (isZeroAddress(toAddress(currentNetworkAddress))) {
+		if (!provider || isZeroAddress(toAddress(currentNetworkAddress))) {
 			return;
 		}
-		if (toAddress(tokenToSend.address) === ETH_TOKEN_ADDRESS) {
-			new Transaction(provider, sendEther, set_txStatus).populate(
-				toAddress(currentNetworkAddress),
-				amountToSend.raw,
-				balances[ETH_TOKEN_ADDRESS]?.raw
-			).onSuccess(async (receipt): Promise<void> => {
-				if (receipt?.transactionHash) {
-					await onRegisterDonation(receipt.transactionHash);
-				}
-				await props.onDonateCallback();
-				set_amountToSend({...toNormalizedBN(0), value: 0});
-			}).perform();
+		if (toAddress(tokenToSend.address) === toAddress(ETH_TOKEN_ADDRESS)) {
+			const result = await transferEther({
+				connector: provider,
+				receiverAddress: currentNetworkAddress,
+				amount: amountToSend.raw,
+				statusHandler: set_txStatus
+			});
+			if (result.isSuccessful && result.receipt) {
+				await onRegisterDonation(result.receipt.transactionHash);
+			}
+			await props.onDonateCallback();
+			set_amountToSend({...toNormalizedBN(0), value: 0});
 		} else {
-			new Transaction(provider, transfer, set_txStatus).populate(
-				toAddress(tokenToSend.address),
-				toAddress(currentNetworkAddress),
-				amountToSend.raw,
-				balances[tokenToSend.address]?.raw
-			).onSuccess(async (receipt): Promise<void> => {
-				if (receipt?.transactionHash) {
-					await onRegisterDonation(receipt.transactionHash);
-				}
-				await props.onDonateCallback({
-					token: toAddress(tokenToSend.address),
-					decimals: tokenToSend.decimals,
-					symbol: tokenToSend.symbol,
-					name: tokenToSend.name
-				});
-				set_amountToSend({...toNormalizedBN(0), value: 0});
-			}).perform();
+			const result = await transferERC20({
+				connector: provider,
+				contractAddress: tokenToSend.address,
+				receiverAddress: currentNetworkAddress,
+				amount: amountToSend.raw,
+				statusHandler: set_txStatus
+			});
+			if (result.isSuccessful && result.receipt) {
+				await onRegisterDonation(result.receipt.transactionHash);
+			}
+			await props.onDonateCallback({
+				token: toAddress(tokenToSend.address),
+				decimals: tokenToSend.decimals,
+				symbol: tokenToSend.symbol,
+				name: tokenToSend.name
+			});
+			set_amountToSend({...toNormalizedBN(0), value: 0});
 		}
-	}, [amountToSend.raw, balances, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
+	}, [amountToSend.raw, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
 
 	const onComputeValueFromAmount = useCallback((amount: TNormalizedBN): void => {
-		const	value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
+		const value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
 		set_amountToSend({...amount, value});
 	}, [price, safeChainID, tokenToSend.address]);
 
 	const onComputeAmountFromValue = useCallback((value: number): void => {
 		const amountNormalized = value / price[safeChainID][tokenToSend.address];
-		const amountAsBN = ethers.utils.parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
-		set_amountToSend({...toNormalizedBN(amountAsBN, tokenToSend.decimals), value});
+		const amountAsBN = parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
+		set_amountToSend({...toNormalizedBN(amountAsBN.toString(), tokenToSend.decimals), value});
 	}, [price, safeChainID, tokenToSend.address, tokenToSend.decimals]);
 
 	const onRefreshPrice = useCallback(async (): Promise<void> => {
 		let	tokenAddress = tokenToSend.address;
-		if (tokenToSend.address === ETH_TOKEN_ADDRESS) {
+		if (tokenToSend.address === toAddress(ETH_TOKEN_ADDRESS)) {
 			tokenAddress = NATIVE_WRAPPER_COINS[safeChainID];
 		}
 
 		const response = await axios.get(`https://api.coingecko.com/api/v3/simple/token_price/${GECKO_CHAIN_NAMES[safeChainID] || 'ethereum'}?contract_addresses=${tokenAddress}&vs_currencies=usd&precision=6`);
 		set_price((prev): TNDict<TDict<number>> => {
-			const	newPrice = {...prev};
+			const newPrice = {...prev};
 			if (!newPrice[safeChainID]) {
 				newPrice[safeChainID] = {};
 			}
-			newPrice[safeChainID][tokenToSend.address] = Number(response?.data?.[tokenAddress.toLowerCase()]?.usd || 0);
+			newPrice[safeChainID][tokenToSend.address] = Number(response?.data?.[toAddress(tokenAddress).toLowerCase()]?.usd || 0);
 			return newPrice;
 		});
 		set_amountToSend((prev): TNormalizedBN & {value: number} => {
-			const	newAmount = {...prev};
+			const newAmount = {...prev};
 			//If a specific value is selected, we don't want to change it, so we only update the value to match the new price
 			if ([10, 50, 100].includes(Number(formatAmount(newAmount.value, 2, 2)))) {
-				const amountNormalized = newAmount.value / Number(response?.data?.[tokenAddress.toLowerCase()]?.usd || 0);
-				const	amountAsBN = ethers.utils.parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
-				const normalizedBNAmount = toNormalizedBN(amountAsBN, tokenToSend.decimals);
+				const amountNormalized = newAmount.value / Number(response?.data?.[toAddress(tokenAddress).toLowerCase()]?.usd || 0);
+				const amountAsBN = parseUnits(amountNormalized.toFixed(6), tokenToSend.decimals);
+				const normalizedBNAmount = toNormalizedBN(amountAsBN.toString(), tokenToSend.decimals);
 				newAmount.normalized = normalizedBNAmount.normalized;
 				newAmount.raw = normalizedBNAmount.raw;
 			} else {
-				newAmount.value = Number(newAmount.normalized) * Number(response?.data?.[tokenAddress.toLowerCase()]?.usd || 0);
+				newAmount.value = Number(newAmount.normalized) * Number(response?.data?.[toAddress(tokenAddress).toLowerCase()]?.usd || 0);
 			}
 			return newAmount;
 		});
@@ -369,8 +350,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 							isBusy={txStatus.pending}
 							isDisabled={
 								!isActive ||
-								(amountToSend?.raw || Zero)?.isZero() ||
-								(amountToSend?.raw || Zero)?.gt(balances?.[toAddress(tokenToSend.address)]?.raw || Zero) ||
+								((amountToSend?.raw || 0n) === 0n) ||
+								((amountToSend?.raw || 0n) > (balances?.[toAddress(tokenToSend.address)]?.raw || 0n)) ||
 								(isZeroAddress(currentNetworkAddress))
 							}
 							onClick={onDonate}>
@@ -411,7 +392,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 
 function SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}): ReactElement {
 	const {safeChainID} = useChainID();
-	const currentNetworkAddress = (props.addresses as never)[PossibleNetworks[safeChainID].label];
+	const currentNetworkAddress = (props.addresses as never)[PossibleNetworks[safeChainID]?.label || 'Unknown'];
 	const [isOpen, set_isOpen] = useState<boolean>(false);
 
 	return (

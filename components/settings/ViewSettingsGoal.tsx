@@ -32,14 +32,18 @@ function ViewSettingsGoal(props: Maybe<TGoal> & {mutate: VoidFunction}): ReactEl
 
 	const onSubmitForm = useCallback(async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
+		if (!provider) {
+			return;
+		}
 		set_isSaving(true);
 		try {
-			const signer = await provider.getSigner();
-			const signature = await signer.signMessage(JSON.stringify({
+			const message = JSON.stringify({
 				startDate: new Date(startDate).valueOf() / 1000,
 				endDate: new Date(endDate).valueOf() / 1000,
 				goalValue
-			}));
+			});
+			const signer = await provider.getWalletClient();
+			const signature = await signer.signMessage({message});
 			await axios.post(`${process.env.BASE_API_URI}/goal/${toAddress(address)}`, {
 				goal: {
 					startDate: new Date(startDate).valueOf() / 1000,

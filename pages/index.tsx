@@ -5,18 +5,18 @@ import {useRouter} from 'next/router';
 import IconCheck from 'components/icons/IconCheck';
 import IconCircleCross from 'components/icons/IconCircleCross';
 import Avatar from 'components/profile/Avatar';
-import {isAddress} from 'ethers/lib/utils';
-import {checkENSValidity, checkLensValidity} from 'utils';
-import lensProtocol from 'utils/lens.tools';
+import {checkENSValidity} from 'utils/tools.ens';
+import lensProtocol, {checkLensValidity} from 'utils/tools.lens';
+import {isAddress} from 'viem';
 import useSWR from 'swr';
 import {useUpdateEffect} from '@react-hookz/web';
+import {fetchEnsResolver} from '@wagmi/core';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useUI} from '@yearn-finance/web-lib/contexts/useUI';
 import IconLoader from '@yearn-finance/web-lib/icons/IconLoader';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
-import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 
 import type {ReactElement} from 'react';
 import type {TReceiverProps} from 'utils/types';
@@ -39,7 +39,7 @@ function	SearchFor(): ReactElement {
 			set_isValidValue(true);
 		} else {
 			if (value.endsWith('.eth')) {
-				const	resolvedAddress = await getProvider(1).resolveName(value);
+				const resolvedAddress = await fetchEnsResolver({name: value});
 				if (resolvedAddress) {
 					if (isAddress(resolvedAddress)) {
 						performBatchedUpdates((): void => {
@@ -277,16 +277,14 @@ function	Home(): ReactElement {
 				<div className={'ml-[-10vw] flex w-[120vw] items-center justify-center'}>
 					<div className={'mb-44 w-full space-y-4'}>
 						<Marquee
-							speed={20}
-							onCycleComplete={(): void => console.log('he')}>
+							speed={20}>
 							{randomOrderedData
 								.filter((_, i): boolean => i < 10)
 								.map((receiver, i): ReactElement => renderProfileBox(receiver, i))}
 						</Marquee>
 						<Marquee
 							direction={'right'}
-							speed={20}
-							onCycleComplete={(): void => console.log('he')}>
+							speed={20}>
 							{randomOrderedData
 								.filter((_, i): boolean => i >= 10 && i < 20)
 								.map((receiver, i): ReactElement => renderProfileBox(receiver, i))}
@@ -295,8 +293,7 @@ function	Home(): ReactElement {
 						<div className={'hidden sm:flex '}>
 							<Marquee
 								direction={'left'}
-								speed={20}
-								onCycleComplete={(): void => console.log('he')}>
+								speed={20}>
 								{randomOrderedData
 									.filter((_, i): boolean => i >= 20 && i < 30)
 									.map((receiver, i): ReactElement => renderProfileBox(receiver, i))}

@@ -22,6 +22,7 @@ export type TAddresses = {
 	gno?: string;
 	matic?: string;
 	ftm?: string;
+	zkevm?: string;
 	arb?: string;
 }
 export type TNetworkData = {name: string, label: string};
@@ -32,6 +33,7 @@ export const PossibleNetworks: TNDict<TNetworkData> = {
 	100: {name: 'Gnosis', label: 'gno'},
 	137: {name: 'Polygon', label: 'matic'},
 	250: {name: 'Fantom', label: 'ftm'},
+	1101: {name: 'Polygon zkEVM', label: 'zkevm'},
 	42161: {name: 'Arbitrum', label: 'arb'}
 };
 

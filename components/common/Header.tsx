@@ -2,15 +2,17 @@ import React, {Fragment, useEffect, useMemo, useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/router';
 import Logo from 'components/icons/logo';
+import {useConnect, usePublicClient} from 'wagmi';
 import {Listbox, Transition} from '@headlessui/react';
+import {useMountEffect} from '@react-hookz/web';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
-import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
-import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
+import {toSafeChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import IconChevronBottom from '@yearn-finance/web-lib/icons/IconChevronBottom';
 import IconWallet from '@yearn-finance/web-lib/icons/IconWallet';
 import {truncateHex} from '@yearn-finance/web-lib/utils/address';
 
 import type {ReactElement} from 'react';
+import type {Chain} from 'viem';
 
 type TMenu = {path: string, label: string | ReactElement, target?: string};
 type TNavbar = {nav: TMenu[], currentPathName: string};
@@ -21,7 +23,13 @@ export type THeader = {
 	currentPathName: string
 }
 
-function	Navbar({nav, currentPathName}: TNavbar): ReactElement {
+function Navbar({nav, currentPathName}: TNavbar): ReactElement {
+	const [isClient, set_isClient] = useState<boolean>(false);
+	useMountEffect((): void => set_isClient(true));
+
+	if (!isClient) {
+		return <Fragment />;
+	}
 	return (
 		<nav className={'yearn--nav'}>
 			{nav.map((option): ReactElement => (
@@ -30,7 +38,7 @@ function	Navbar({nav, currentPathName}: TNavbar): ReactElement {
 					target={option.target}
 					href={option.path}>
 					<p className={`yearn--header-nav-item ${currentPathName === option.path ? 'active' : '' }`}>
-						{option.label}
+						{option?.label || 'Unknown'}
 					</p>
 				</Link>
 			))}
@@ -38,17 +46,23 @@ function	Navbar({nav, currentPathName}: TNavbar): ReactElement {
 	);
 }
 
-function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): ReactElement {
-	const chains = useChain();
-	const {safeChainID} = useChainID();
+function NetworkSelector(): ReactElement {
 	const {onSwitchChain} = useWeb3();
+	const publicClient = usePublicClient();
+	const {connectors} = useConnect();
+	const safeChainID = toSafeChainID(publicClient?.chain.id, Number(process.env.BASE_CHAINID));
 
 	const supportedNetworks = useMemo((): TNetwork[] => {
-		const	noTestnet = supportedChainID.filter((chainID: number): boolean => chainID !== 1337);
-		return noTestnet.map((chainID: number): TNetwork => (
-			{value: chainID, label: chains.get(chainID)?.displayName || `Chain ${chainID}`}
+		const injectedConnector = connectors.find((e): boolean => e.id === 'injected');
+		if (!injectedConnector) {
+			return [];
+		}
+		const chainsForInjected = injectedConnector.chains;
+		const noTestnet = chainsForInjected.filter(({id}): boolean => id !== 1337);
+		return noTestnet.map((network: Chain): TNetwork => (
+			{value: network.id, label: network.name}
 		));
-	}, [chains, supportedChainID]);
+	}, [connectors]);
 
 	const	currentNetwork = useMemo((): TNetwork | undefined => (
 		supportedNetworks.find((network): boolean => network.value === safeChainID)
@@ -70,7 +84,7 @@ function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): Reac
 		return (
 			<button
 				suppressHydrationWarning
-				onClick={(): void => onSwitchChain(supportedNetworks[0].value, true)}
+				onClick={(): void => onSwitchChain(supportedNetworks[0].value)}
 				className={'yearn--header-nav-item mr-4 hidden cursor-pointer flex-row items-center border-0 p-0 text-sm hover:!text-neutral-500 md:flex'}>
 				<div suppressHydrationWarning className={'relative flex flex-row items-center'}>
 					{'Invalid Network'}
@@ -83,18 +97,18 @@ function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): Reac
 		<div className={'relative z-50 mr-4'}>
 			<Listbox
 				value={safeChainID}
-				onChange={(value: any): void => onSwitchChain(value.value, true)}>
+				onChange={(value: any): void => onSwitchChain(value.value)}>
 				{({open}): ReactElement => (
 					<>
 						<Listbox.Button
 							suppressHydrationWarning
-							className={'yearn--header-nav-item hidden flex-row items-center border-0 p-0 text-sm md:flex'}>
-							<div suppressHydrationWarning className={'relative flex flex-row items-center'}>
+							className={'yearn--header-nav-item flex flex-row items-center border-0 p-0 text-xs md:flex md:text-sm'}>
+							<div suppressHydrationWarning className={'relative flex flex-row items-center truncate whitespace-nowrap text-xs md:text-sm'}>
 								{currentNetwork?.label || 'Ethereum'}
 							</div>
-							<div className={'ml-2'}>
+							<div className={'ml-1 md:ml-2'}>
 								<IconChevronBottom
-									className={`h-5 w-4 transition-transform ${open ? '-rotate-180' : 'rotate-0'}`} />
+									className={`h-3 w-3 transition-transform md:h-5 md:w-4 ${open ? '-rotate-180' : 'rotate-0'}`} />
 							</div>
 						</Listbox.Button>
 						<Transition
@@ -143,9 +157,22 @@ function	NetworkSelector({supportedChainID}: {supportedChainID: number[]}): Reac
 	);
 }
 
-function	WalletSelector(): ReactElement {
-	const	{options, isActive, address, ens, lensProtocolHandle, openLoginModal, onDesactivate, onSwitchChain} = useWeb3();
-	const	[walletIdentity, set_walletIdentity] = useState<string | undefined>(undefined);
+function WalletSelector(): ReactElement {
+	const {isActive, address, ens, lensProtocolHandle, openLoginModal, onDesactivate, onSwitchChain} = useWeb3();
+	const [walletIdentity, set_walletIdentity] = useState<string | undefined>(undefined);
+	const {connectors} = useConnect();
+
+	const supportedNetworks = useMemo((): TNetwork[] => {
+		const injectedConnector = connectors.find((e): boolean => e.id === 'injected');
+		if (!injectedConnector) {
+			return [];
+		}
+		const chainsForInjected = injectedConnector.chains;
+		const noTestnet = chainsForInjected.filter(({id}): boolean => id !== 1337);
+		return noTestnet.map((network: Chain): TNetwork => (
+			{value: network.id, label: network.name}
+		));
+	}, [connectors]);
 
 	useEffect((): void => {
 		if (!isActive && address) {
@@ -167,12 +194,12 @@ function	WalletSelector(): ReactElement {
 				if (isActive) {
 					onDesactivate();
 				} else if (!isActive && address) {
-					onSwitchChain(options?.defaultChainID || 1, true);
+					onSwitchChain(supportedNetworks[0].value);
 				} else {
 					openLoginModal();
 				}
 			}}>
-			<p suppressHydrationWarning className={'yearn--header-nav-item text-sm'}>
+			<p suppressHydrationWarning className={'yearn--header-nav-item !text-xs md:!text-sm'}>
 				{walletIdentity ? walletIdentity : (
 					<span>
 						<IconWallet
@@ -187,13 +214,9 @@ function	WalletSelector(): ReactElement {
 	);
 }
 
-function	AppHeader(): ReactElement {
+function AppHeader(): ReactElement {
 	const	{pathname} = useRouter();
-	const	{isActive, ens, address, options} = useWeb3();
-
-	const supportedChainID = useMemo((): number[] => (
-		options?.supportedChainID || [1]
-	), [options?.supportedChainID]);
+	const	{isActive, ens, address} = useWeb3();
 
 	const nav = useMemo((): TMenu[] => {
 		const nav: TMenu[] = [{path: '/', label: <Logo className={'h-8 text-neutral-900'} />}];
@@ -209,15 +232,20 @@ function	AppHeader(): ReactElement {
 				<header className={'yearn--header'}>
 					<Navbar currentPathName={pathname || ''} nav={nav} />
 					<div className={'flex w-1/3 items-center justify-center md:hidden'}>
-						<Logo className={'h-6 text-neutral-700'} />
-						<Link href={`/${ens || address}`} className={'ml-2 text-sm text-neutral-400 transition-colors hover:text-neutral-900'}>
+						<Link href={'/'}>
+							<Logo className={'h-6 text-neutral-700'} />
+						</Link>
+						<Link
+							suppressHydrationWarning
+							href={`/${ens || address}`}
+							className={'ml-2 text-xs text-neutral-500 transition-colors hover:text-neutral-900'}>
 							{'My profile'}
 						</Link>
 					</div>
 					<div className={'flex w-1/3 justify-center'}>
 					</div>
 					<div className={'flex w-1/3 items-center justify-end'}>
-						<NetworkSelector supportedChainID={supportedChainID} />
+						<NetworkSelector />
 						<WalletSelector />
 					</div>
 				</header>

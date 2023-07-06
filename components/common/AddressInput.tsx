@@ -1,15 +1,15 @@
 import React, {useCallback, useState} from 'react';
 import IconCheck from 'components/icons/IconCheck';
 import IconCircleCross from 'components/icons/IconCircleCross';
-import {isAddress} from 'ethers/lib/utils';
-import {checkENSValidity, checkLensValidity} from 'utils';
-import lensProtocol from 'utils/lens.tools';
+import {checkENSValidity} from 'utils/tools.ens';
+import lensProtocol, {checkLensValidity} from 'utils/tools.lens';
+import {isAddress} from 'viem';
 import {useUpdateEffect} from '@react-hookz/web';
+import {fetchEnsResolver} from '@wagmi/core';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import IconLoader from '@yearn-finance/web-lib/icons/IconLoader';
 import {isZeroAddress, toAddress} from '@yearn-finance/web-lib/utils/address';
 import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
-import {getProvider} from '@yearn-finance/web-lib/utils/web3/providers';
 
 import type {ReactElement} from 'react';
 import type {TAddress} from '@yearn-finance/web-lib/types';
@@ -34,7 +34,7 @@ function	AddressInput({value, onChangeValue, onConfirm, className, shouldBeDisab
 			set_isValidValue(true);
 		} else {
 			if (value.endsWith('.eth')) {
-				const	resolvedAddress = await getProvider(1).resolveName(value);
+				const resolvedAddress = await fetchEnsResolver({name: value});
 				if (resolvedAddress) {
 					if (isAddress(resolvedAddress)) {
 						performBatchedUpdates((): void => {

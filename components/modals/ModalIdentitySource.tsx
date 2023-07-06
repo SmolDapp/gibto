@@ -18,13 +18,16 @@ function ModalIdentitySource({identity, isOpen, set_isOpen}: {
 	const	{toast} = yToast();
 	const	[isSaving, set_isSaving] = useState(false);
 
-	async function	onChangeIdentitySource(source: 'on-chain' | 'off-chain'): Promise<void> {
+	async function	onChangeIdentitySource(message: 'on-chain' | 'off-chain'): Promise<void> {
+		if (!provider) {
+			return;
+		}
 		try {
 			set_isSaving(true);
-			const signer = await provider.getSigner();
-			const signature = await signer.signMessage(source);
+			const signer = await provider.getWalletClient();
+			const signature = await signer.signMessage({message});
 			await axios.put(`${process.env.BASE_API_URI}/profile/${toAddress(address)}`, {
-				identitySource: source,
+				identitySource: message,
 				type: 'identitySource',
 				address: toAddress(address),
 				signature
