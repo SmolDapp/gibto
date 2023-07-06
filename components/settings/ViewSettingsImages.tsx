@@ -8,7 +8,7 @@ import {fetchEnsResolver, prepareWriteContract} from '@wagmi/core';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
-import {toAddress, toWagmiAddress} from '@yearn-finance/web-lib/utils/address';
+import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {defaultTxStatus, handleTx, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import type {FormEvent, ReactElement} from 'react';
@@ -38,7 +38,7 @@ function ViewSettingsImages(props: TReceiverProps): ReactElement {
 			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'cover', fields.cover]}));
 		}
 		const config = await prepareWriteContract({
-			address: toWagmiAddress(resolver),
+			address: toAddress(resolver),
 			abi: ENS_RESOLVER_ABI,
 			functionName: 'multicall',
 			walletClient: signer,

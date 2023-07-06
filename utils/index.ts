@@ -1,13 +1,7 @@
-import lensProtocol from 'utils/lens.tools';
-import {isAddress} from 'viem';
-import {fetchEnsResolver} from '@wagmi/core';
-import {toAddress, zeroAddress} from '@yearn-finance/web-lib/utils/address';
 import {parseUnits} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
-import type {TAddress} from '@yearn-finance/web-lib/types';
 import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
-export const MATIC_TOKEN_ADDRESS = toAddress('0x0000000000000000000000000000000000001010');
 export const transition = {duration: 0.3, ease: [0.17, 0.67, 0.83, 1], height: {duration: 0}};
 export const thumbnailVariants = {
 	initial: {y: 20, opacity: 0, transition, height: 0},
@@ -40,24 +34,4 @@ export function handleInputChangeEventValue(e: React.ChangeEvent<HTMLInputElemen
 
 	const	raw = parseUnits(amount.toFixed(decimals) || '0', decimals || 18);
 	return ({raw: raw, normalized: amount.toString() || '0'});
-}
-
-export async function checkENSValidity(ens: string): Promise<[TAddress, boolean]> {
-	const resolvedAddress = await fetchEnsResolver({name: ens});
-	if (resolvedAddress) {
-		if (isAddress(resolvedAddress)) {
-			return [toAddress(resolvedAddress), true];
-		}
-	}
-	return [zeroAddress, false];
-}
-
-export async function checkLensValidity(lens: string): Promise<[TAddress, boolean]> {
-	const	resolvedName = await lensProtocol.getAddressFromHandle(lens);
-	if (resolvedName) {
-		if (isAddress(resolvedName)) {
-			return [toAddress(resolvedName), true];
-		}
-	}
-	return [zeroAddress, false];
 }

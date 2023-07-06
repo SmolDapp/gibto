@@ -6,8 +6,7 @@ import IconMessageCheck from 'components/icons/IconMessageCheck';
 import ModalAddresses from 'components/modals/ModalAddresses';
 import {useWallet} from 'contexts/useWallet';
 import {handleInputChangeEventValue} from 'utils';
-import {sendEther} from 'utils/actions/sendEth';
-import {transfer} from 'utils/actions/transferERC20';
+import {transferERC20, transferEther} from 'utils/actions';
 import notify from 'utils/notifier';
 import cowswapTokenList from 'utils/tokenLists.json';
 import {PossibleNetworks} from 'utils/types';
@@ -19,9 +18,9 @@ import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
-import {BigZero, parseUnits, toNormalizedBN} from '@yearn-finance/web-lib/utils/format';
+import {parseUnits, toNormalizedBN} from '@yearn-finance/web-lib/utils/format';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
-import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
+import {defaultTxStatus} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import ModalMessage from '../modals/ModalMessage';
 
@@ -209,33 +208,35 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			return;
 		}
 		if (toAddress(tokenToSend.address) === toAddress(ETH_TOKEN_ADDRESS)) {
-			new Transaction(provider, sendEther, set_txStatus).populate(
-				toAddress(currentNetworkAddress),
-				amountToSend.raw
-			).onSuccess(async (receipt): Promise<void> => {
-				if (receipt?.transactionHash) {
-					await onRegisterDonation(receipt.transactionHash);
-				}
-				await props.onDonateCallback();
-				set_amountToSend({...toNormalizedBN(0), value: 0});
-			}).perform();
+			const result = await transferEther({
+				connector: provider,
+				receiverAddress: currentNetworkAddress,
+				amount: amountToSend.raw,
+				statusHandler: set_txStatus
+			});
+			if (result.isSuccessful && result.receipt) {
+				await onRegisterDonation(result.receipt.transactionHash);
+			}
+			await props.onDonateCallback();
+			set_amountToSend({...toNormalizedBN(0), value: 0});
 		} else {
-			new Transaction(provider, transfer, set_txStatus).populate(
-				toAddress(tokenToSend.address),
-				toAddress(currentNetworkAddress),
-				amountToSend.raw
-			).onSuccess(async (receipt): Promise<void> => {
-				if (receipt?.transactionHash) {
-					await onRegisterDonation(receipt.transactionHash);
-				}
-				await props.onDonateCallback({
-					token: toAddress(tokenToSend.address),
-					decimals: tokenToSend.decimals,
-					symbol: tokenToSend.symbol,
-					name: tokenToSend.name
-				});
-				set_amountToSend({...toNormalizedBN(0), value: 0});
-			}).perform();
+			const result = await transferERC20({
+				connector: provider,
+				contractAddress: tokenToSend.address,
+				receiverAddress: currentNetworkAddress,
+				amount: amountToSend.raw,
+				statusHandler: set_txStatus
+			});
+			if (result.isSuccessful && result.receipt) {
+				await onRegisterDonation(result.receipt.transactionHash);
+			}
+			await props.onDonateCallback({
+				token: toAddress(tokenToSend.address),
+				decimals: tokenToSend.decimals,
+				symbol: tokenToSend.symbol,
+				name: tokenToSend.name
+			});
+			set_amountToSend({...toNormalizedBN(0), value: 0});
 		}
 	}, [amountToSend.raw, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
 
@@ -366,8 +367,8 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 							isBusy={txStatus.pending}
 							isDisabled={
 								!isActive ||
-								((amountToSend?.raw || BigZero) === 0n) ||
-								((amountToSend?.raw || BigZero) > (balances?.[toAddress(tokenToSend.address)]?.raw || BigZero)) ||
+								((amountToSend?.raw || 0n) === 0n) ||
+								((amountToSend?.raw || 0n) > (balances?.[toAddress(tokenToSend.address)]?.raw || 0n)) ||
 								(isZeroAddress(currentNetworkAddress))
 							}
 							onClick={onDonate}>

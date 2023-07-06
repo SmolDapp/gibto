@@ -1,8 +1,8 @@
 import React, {useCallback, useState} from 'react';
 import IconCheck from 'components/icons/IconCheck';
 import IconCircleCross from 'components/icons/IconCircleCross';
-import {checkENSValidity, checkLensValidity} from 'utils';
-import lensProtocol from 'utils/lens.tools';
+import {checkENSValidity} from 'utils/tools.ens';
+import lensProtocol, {checkLensValidity} from 'utils/tools.lens';
 import {isAddress} from 'viem';
 import {useUpdateEffect} from '@react-hookz/web';
 import {fetchEnsResolver} from '@wagmi/core';
