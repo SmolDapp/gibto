@@ -10,9 +10,9 @@ import SectionDonate from './SectionDonate';
 import SectionDonationHistory from './SectionDonationHistory';
 import SectionHero from './SectionHero';
 
-import type {TUseBalancesTokens} from 'hooks/useBalances';
 import type {ReactElement} from 'react';
-import type {TDonationsProps, TGoal, TReceiverProps} from 'utils/types';
+import type {TDonationsProps, TGoal, TReceiverProps} from 'utils/types/types';
+import type {TUseBalancesTokens} from '@yearn-finance/web-lib/hooks/useBalances';
 
 function	Profile(props: TReceiverProps): ReactElement {
 	const {balances, refresh} = useWallet();
@@ -62,7 +62,7 @@ function	Profile(props: TReceiverProps): ReactElement {
 	return (
 		<>
 			<SectionHero
-				goal={goal}
+				goal={goal as TGoal}
 				mutateGoal={mutateGoal}
 				isLoadingGoal={isLoadingGoal}
 				{...props} />

@@ -1,11 +1,11 @@
 import React, {Fragment} from 'react';
 import Modal from 'components/common/Modal';
-import {PossibleNetworks} from 'utils/types';
+import {PossibleNetworks} from 'utils/types/types';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {truncateHex} from '@yearn-finance/web-lib/utils/address';
 
 import type {Dispatch, ReactElement, SetStateAction} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function ModalAddresses({identity, isOpen, set_isOpen}: {
 	identity: TReceiverProps,

@@ -7,7 +7,7 @@ import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 
 import type {Dispatch, ReactElement, SetStateAction} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function ModalIdentitySource({identity, isOpen, set_isOpen}: {
 	identity: TReceiverProps,

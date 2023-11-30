@@ -21,7 +21,7 @@ import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 import type {GetServerSideProps, GetServerSidePropsResult} from 'next';
 import type {AppProps} from 'next/app';
 import type {ReactElement} from 'react';
-import type {TGoal, TReceiverProps} from 'utils/types';
+import type {TGoal, TReceiverProps} from 'utils/types/types';
 
 function	Receiver(props: TReceiverProps & AppProps): ReactElement {
 	const [page, set_page] = useState<'profile' | 'media' | 'goal' | 'socials' | 'addresses'>('profile');

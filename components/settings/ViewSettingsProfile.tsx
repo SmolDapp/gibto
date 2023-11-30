@@ -4,15 +4,16 @@ import ENS_RESOLVER_ABI from 'utils/abi/ENSResolver.abi';
 import {encodeFunctionData} from 'viem';
 import {namehash} from 'viem/ens';
 import axios from 'axios';
-import {fetchEnsResolver, prepareWriteContract} from '@wagmi/core';
+import {fetchEnsResolver} from '@wagmi/core';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
-import {defaultTxStatus, handleTx, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
+import {handleTx} from '@yearn-finance/web-lib/utils/wagmi/provider';
+import {defaultTxStatus, Transaction} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import type {ReactElement} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 import type {Hex} from 'viem';
 import type {Connector} from 'wagmi';
 import type {TTxResponse} from '@yearn-finance/web-lib/utils/web3/transaction';
@@ -27,7 +28,6 @@ function ViewSettingsProfile(props: TReceiverProps): ReactElement {
 		provider: Connector,
 		{ens, fields}: {ens: string, fields: TReceiverProps}
 	): Promise<TTxResponse> {
-		const signer = await provider.getWalletClient();
 		const resolver = await fetchEnsResolver({name: ens});
 		const nameNode = namehash(ens);
 		const multicalls: Hex[] = [];
@@ -43,15 +43,17 @@ function ViewSettingsProfile(props: TReceiverProps): ReactElement {
 		if (props.about !== fields.about) {
 			multicalls.push(encodeFunctionData({abi: ENS_RESOLVER_ABI, functionName: 'setText', args: [nameNode, 'about', fields.about]}));
 		}
-		const config = await prepareWriteContract({
+		return await handleTx({
+			connector: provider,
+			contractAddress: toAddress(resolver),
+			statusHandler: set_txStatus,
+			chainID: chainID
+		}, {
 			address: toAddress(resolver),
 			abi: ENS_RESOLVER_ABI,
 			functionName: 'multicall',
-			walletClient: signer,
-			chainId: chainID,
 			args: [multicalls]
 		});
-		return await handleTx(config);
 	}
 	async function	onSubmitRecords(): Promise<void> {
 		if (!provider) {

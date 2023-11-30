@@ -1,17 +1,116 @@
-import {assertAddress, handleTx, toWagmiProvider} from 'utils/wagmiProvider';
-import {erc20ABI, getPublicClient, prepareSendTransaction, readContract, sendTransaction, waitForTransaction} from '@wagmi/core';
+import assert from 'assert';
+import {BaseError} from 'viem';
+import {erc20ABI, getPublicClient, prepareSendTransaction, prepareWriteContract, readContract, sendTransaction, switchNetwork, waitForTransaction, writeContract} from '@wagmi/core';
+import {toast} from '@yearn-finance/web-lib/components/yToast';
 import {MAX_UINT_256} from '@yearn-finance/web-lib/utils/constants';
 import {toBigInt} from '@yearn-finance/web-lib/utils/format.bigNumber';
+import {toWagmiProvider} from '@yearn-finance/web-lib/utils/wagmi/provider';
+import {assertAddress} from '@yearn-finance/web-lib/utils/wagmi/utils';
 import {defaultTxStatus} from '@yearn-finance/web-lib/utils/web3/transaction';
 
-import type {TWriteTransaction} from 'utils/wagmiProvider';
-import type {BaseError} from 'viem';
-import type {Connector} from 'wagmi';
+import type {Abi,SimulateContractParameters} from 'viem';
+import type {Connector, WalletClient} from 'wagmi';
 import type {TAddress} from '@yearn-finance/web-lib/types';
+import type {TWriteTransaction} from '@yearn-finance/web-lib/utils/wagmi/provider';
 import type {TTxResponse} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 //Because USDT do not return a boolean on approve, we need to use this ABI
 const ALTERNATE_ERC20_APPROVE_ABI = [{'constant': false, 'inputs': [{'name': '_spender', 'type': 'address'}, {'name': '_value', 'type': 'uint256'}], 'name': 'approve', 'outputs': [], 'payable': false, 'stateMutability': 'nonpayable', 'type': 'function'}] as const;
+
+
+type TPrepareWriteContractConfig<
+	TAbi extends Abi | readonly unknown[] = Abi,
+	TFunctionName extends string = string
+> = Omit<SimulateContractParameters<TAbi, TFunctionName>, 'chain' | 'address'> & {
+	chainId?: number;
+	walletClient?: WalletClient;
+	address: TAddress | undefined;
+	confirmation?: number;
+};
+export async function handleTx<TAbi extends Abi | readonly unknown[], TFunctionName extends string>(
+	args: TWriteTransaction,
+	props: TPrepareWriteContractConfig<TAbi, TFunctionName>
+): Promise<TTxResponse> {
+	args.statusHandler?.({...defaultTxStatus, pending: true});
+	let wagmiProvider = await toWagmiProvider(args.connector);
+
+	// Use debug mode
+	if ((window as any).ethereum.useForknetForMainnet) {
+		if (args.chainID === 1) {
+			args.chainID = 1337;
+		}
+	}
+
+	/* 🔵 - Yearn.Fi ***************************************************************************
+	 ** First, make sure we are using the correct chainID.
+	 ******************************************************************************************/
+	if (wagmiProvider.chainId !== args.chainID) {
+		try {
+			await switchNetwork({chainId: args.chainID});
+		} catch (error) {
+			if (!(error instanceof BaseError)) {
+				return {isSuccessful: false, error};
+			}
+			toast({type: 'error', content: error.shortMessage});
+			args.statusHandler?.({...defaultTxStatus, error: true});
+			console.error(error);
+			return {isSuccessful: false, error};
+		}
+	}
+
+	wagmiProvider = await toWagmiProvider(args.connector);
+	assertAddress(props.address, 'contractAddress');
+	assertAddress(wagmiProvider.address, 'userAddress');
+	assert(wagmiProvider.chainId === args.chainID, 'ChainID mismatch');
+	try {
+		const config = await prepareWriteContract({
+			...wagmiProvider,
+			...(props as TPrepareWriteContractConfig),
+			address: props.address,
+			value: toBigInt(props.value),
+			chainId: args.chainID
+		});
+		const {hash} = await writeContract({...config.request, chainId: undefined});
+		const receipt = await waitForTransaction({
+			hash,
+			chainId: args.chainID,
+			confirmations: props.confirmation || 2
+		});
+		if (receipt.status === 'success') {
+			args.statusHandler?.({...defaultTxStatus, success: true});
+		} else if (receipt.status === 'reverted') {
+			args.statusHandler?.({...defaultTxStatus, error: true});
+		}
+		toast({type: 'success', content: 'Transaction successful!'});
+		return {isSuccessful: receipt.status === 'success', receipt};
+	} catch (error) {
+		if (!(error instanceof BaseError)) {
+			return {isSuccessful: false, error};
+		}
+
+		if (args.onTrySomethingElse) {
+			if (error.name === 'ContractFunctionExecutionError') {
+				return await args.onTrySomethingElse();
+			}
+		}
+
+			toast({type: 'error', content: error.shortMessage});
+		args.statusHandler?.({...defaultTxStatus, error: true});
+		console.error(error);
+		return {isSuccessful: false, error};
+	} finally {
+		setTimeout((): void => {
+			args.statusHandler?.({...defaultTxStatus});
+		}, 3000);
+	}
+}
+
+
+
+
+
+
+
 
 /* 🔵 - Yearn Finance **********************************************************
 ** isApprovedERC20 is a _VIEW_ function that checks if a token is approved for
@@ -81,15 +180,15 @@ export async function transferERC20(props: TTransferERC20): Promise<TTxResponse>
 	assertAddress(props.receiverAddress, 'receiverAddress');
 	assertAddress(props.contractAddress);
 
+	console.warn(props);
 	return await handleTx(props, {
 		address: props.contractAddress,
 		abi: erc20ABI,
 		functionName: 'transfer',
+		chainId: props.chainID,
 		args: [props.receiverAddress, props.amount]
 	});
 }
-
-
 
 /* 🔵 - Yearn Finance **********************************************************
 ** transferEther is a _WRITE_ function that transfers ETH to a recipient.

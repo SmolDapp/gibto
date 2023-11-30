@@ -1,98 +1,107 @@
 import {useCallback, useEffect, useState} from 'react';
 import CardWithIcon from 'components/common/CardWithIcon';
-import ComboboxAddressInput from 'components/common/ComboboxAddressInput';
+import {MultipleTokenSelector} from 'components/common/TokenInput/TokenSelector';
 import IconMessage from 'components/icons/IconMessage';
 import IconMessageCheck from 'components/icons/IconMessageCheck';
 import ModalAddresses from 'components/modals/ModalAddresses';
+import {useTokenList} from 'contexts/useTokenList';
 import {useWallet} from 'contexts/useWallet';
 import {handleInputChangeEventValue} from 'utils';
 import {transferERC20, transferEther} from 'utils/actions';
 import {GECKO_CHAIN_NAMES, NATIVE_WRAPPER_COINS} from 'utils/constants';
 import notify from 'utils/notifier';
-import cowswapTokenList from 'utils/tokenLists.json';
-import {PossibleNetworks} from 'utils/types';
+import {PossibleNetworks} from 'utils/types/types';
 import {useNetwork} from 'wagmi';
 import axios from 'axios';
-import {useMountEffect, useUpdateEffect} from '@react-hookz/web';
+import {useDeepCompareEffect, useDeepCompareMemo, useUpdateEffect} from '@react-hookz/web';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
-import {useChain} from '@yearn-finance/web-lib/hooks/useChain';
 import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {ETH_TOKEN_ADDRESS} from '@yearn-finance/web-lib/utils/constants';
-import {parseUnits, toNormalizedBN} from '@yearn-finance/web-lib/utils/format';
+import {parseUnits, toNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
+import {getNetwork} from '@yearn-finance/web-lib/utils/wagmi/utils';
 import {defaultTxStatus} from '@yearn-finance/web-lib/utils/web3/transaction';
 
 import ModalMessage from '../modals/ModalMessage';
 
-import type {TTokenInfo, TTokenList} from 'contexts/useTokenList';
-import type {TUseBalancesTokens} from 'hooks/useBalances';
 import type {ChangeEvent, Dispatch, ReactElement, SetStateAction} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps, TToken} from 'utils/types/types';
+import type {TUseBalancesTokens} from '@yearn-finance/web-lib/hooks/useBalances';
 import type {TDict, TNDict} from '@yearn-finance/web-lib/types';
-import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format';
+import type {TNormalizedBN} from '@yearn-finance/web-lib/utils/format.bigNumber';
 
-function	TokenToSend({tokenToSend, onChange}: {tokenToSend: TTokenInfo, onChange: Dispatch<SetStateAction<TTokenInfo>>}): ReactElement {
-	const {getCurrent} = useChain();
+function	TokenToSend({tokenToSend, onChange}: {tokenToSend: TToken, onChange: Dispatch<SetStateAction<TToken>>}): ReactElement {
+	const {safeChainID} = useChainID();
 	const [, set_isValidDestination] = useState<boolean | 'undetermined'>('undetermined');
-	const [possibleDestinations, set_possibleDestinations] = useState<TDict<TTokenInfo>>({});
+	const {tokenList} = useTokenList();
+	const [possibleTokens, set_possibleTokens] = useState<TDict<TToken>>({});
+	const {getBalance} = useWallet();
 
 	/* 🔵 - Yearn Finance **************************************************************************
-	** On mount, fetch the token list from the tokenlistooor repo for the cowswap token list, which
-	** will be used to populate the destination token combobox.
-	** Only the tokens in that list will be displayed as possible destinations.
-	**********************************************************************************************/
-	useMountEffect((): void => {
-		axios.all([axios.get('https://raw.githubusercontent.com/Migratooor/tokenLists/main/lists/1/yearn.json')]).then(axios.spread((yearnResponse): void => {
-			const cowswapTokenListResponse = cowswapTokenList as TTokenList;
-			const yearnTokenListResponse = yearnResponse.data as TTokenList;
-			const possibleDestinationsTokens: TDict<TTokenInfo> = {};
+	 ** On mount, fetch the token list from the tokenlistooor repo for the cowswap token list, which
+	 ** will be used to populate the tokenToDisperse token combobox.
+	 ** Only the tokens in that list will be displayed as possible destinations.
+	 **********************************************************************************************/
+	useDeepCompareEffect((): void => {
+		const possibleDestinationsTokens: TDict<TToken> = {};
+		const {wrappedToken} = getNetwork(safeChainID).contracts;
+		if (wrappedToken) {
 			possibleDestinationsTokens[ETH_TOKEN_ADDRESS] = {
-				address: toAddress(ETH_TOKEN_ADDRESS),
-				chainId: 1,
-				name: getCurrent()?.coin || 'Ether',
-				symbol: getCurrent()?.coin || 'ETH',
-				decimals: 18,
-				logoURI: `https://raw.githubusercontent.com/yearn/yearn-assets/master/icons/multichain-tokens/${getCurrent()?.chainID}/${ETH_TOKEN_ADDRESS}/logo-128.png`
+				address: ETH_TOKEN_ADDRESS,
+				chainID: safeChainID,
+				name: wrappedToken.coinName,
+				symbol: wrappedToken.coinSymbol,
+				decimals: wrappedToken.decimals,
+				logoURI: `${process.env.SMOL_ASSETS_URL}/token/${safeChainID}/${ETH_TOKEN_ADDRESS}/logo-32.png`
 			};
-			for (const eachToken of cowswapTokenListResponse.tokens) {
-				if (eachToken.extra) {
-					continue;
-				}
+		}
+		for (const eachToken of Object.values(tokenList)) {
+			if (eachToken.address === ETH_TOKEN_ADDRESS) {
+				continue;
+			}
+			if (eachToken.chainID === safeChainID) {
 				possibleDestinationsTokens[toAddress(eachToken.address)] = eachToken;
 			}
-			for (const eachToken of yearnTokenListResponse.tokens) {
-				if (eachToken.symbol.startsWith('yv')) {
-					possibleDestinationsTokens[toAddress(eachToken.address)] = eachToken;
-				}
+		}
+		set_possibleTokens(possibleDestinationsTokens);
+	}, [tokenList, safeChainID]);
+
+	const filteredBalances = useDeepCompareMemo((): TToken[] => {
+		const withBalance = [];
+		for (const dest of Object.values(possibleTokens)) {
+			if (getBalance(dest.address).raw > 0n) {
+				withBalance.push(dest);
 			}
-			set_possibleDestinations(possibleDestinationsTokens);
-		}));
-	});
+		}
+		return withBalance;
+	}, [possibleTokens, getBalance]);
 
 	/* 🔵 - Yearn Finance **************************************************************************
-	** When the destination token changes, check if it is a valid destination token. The check is
-	** trivial as we only check if the address is valid.
-	**********************************************************************************************/
+	 ** When the destination token changes, check if it is a valid destination token. The check is
+	 ** trivial as we only check if the address is valid.
+	 **********************************************************************************************/
 	useUpdateEffect((): void => {
 		set_isValidDestination('undetermined');
-		if (!isZeroAddress(toAddress(tokenToSend.address))) {
+		if (!isZeroAddress(toAddress(tokenToSend?.address))) {
 			set_isValidDestination(true);
 		}
 	}, [tokenToSend]);
 
 	return (
-		<ComboboxAddressInput
-			possibleDestinations={possibleDestinations}
-			onAddPossibleDestination={set_possibleDestinations}
-			value={tokenToSend.address}
-			onChangeValue={(newToken): void => onChange(newToken)} />
+		<div className={'flex w-full'}>
+			<MultipleTokenSelector
+				token={tokenToSend}
+				tokens={filteredBalances}
+				onChangeToken={(newToken): void => onChange(newToken)}
+			/>
+		</div>
 	);
 }
 
 function	AmountToSend({token, amountToSend, onChange}: {
-	token: TTokenInfo,
+	token: TToken,
 	amountToSend: TNormalizedBN,
 	onChange: Dispatch<SetStateAction<TNormalizedBN>>
 }): ReactElement {
@@ -132,9 +141,9 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 	const [isModalOpen, set_isModalOpen] = useState<boolean>(false);
 	const [attachedMessage, set_attachedMessage] = useState<string>('');
 	const [amountToSend, set_amountToSend] = useState<TNormalizedBN & {value: number}>({...toNormalizedBN(0), value: 0});
-	const [tokenToSend, set_tokenToSend] = useState<TTokenInfo>({
+	const [tokenToSend, set_tokenToSend] = useState<TToken>({
 		address: toAddress(ETH_TOKEN_ADDRESS),
-		chainId: 1,
+		chainID: 1,
 		name: 'Ether',
 		symbol: 'ETH',
 		decimals: 18,
@@ -147,7 +156,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 		if (safeChainID) {
 			set_tokenToSend({
 				address: toAddress(ETH_TOKEN_ADDRESS),
-				chainId: safeChainID,
+				chainID: safeChainID,
 				name: chains.find((e): boolean => e.id === safeChainID)?.nativeCurrency?.name || 'Ether',
 				symbol: chains.find((e): boolean => e.id === safeChainID)?.nativeCurrency?.symbol || 'ETH',
 				decimals: 18,
@@ -195,6 +204,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 				connector: provider,
 				receiverAddress: currentNetworkAddress,
 				amount: amountToSend.raw,
+				chainID: safeChainID,
 				statusHandler: set_txStatus
 			});
 			if (result.isSuccessful && result.receipt) {
@@ -208,6 +218,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 				contractAddress: tokenToSend.address,
 				receiverAddress: currentNetworkAddress,
 				amount: amountToSend.raw,
+				chainID: safeChainID,
 				statusHandler: set_txStatus
 			});
 			if (result.isSuccessful && result.receipt) {
@@ -221,7 +232,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 			});
 			set_amountToSend({...toNormalizedBN(0), value: 0});
 		}
-	}, [amountToSend.raw, currentNetworkAddress, onRegisterDonation, props, provider, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
+	}, [amountToSend.raw, currentNetworkAddress, onRegisterDonation, props, provider, safeChainID, tokenToSend.address, tokenToSend.decimals, tokenToSend.name, tokenToSend.symbol]);
 
 	const onComputeValueFromAmount = useCallback((amount: TNormalizedBN): void => {
 		const value = Number(amount.normalized) * price[safeChainID][tokenToSend.address];
@@ -348,6 +359,7 @@ function DonateBox(props: TReceiverProps & {onDonateCallback: TOnDonateCallback}
 						<Button
 							className={'w-full'}
 							isBusy={txStatus.pending}
+							suppressHydrationWarning
 							isDisabled={
 								!isActive ||
 								((amountToSend?.raw || 0n) === 0n) ||
@@ -404,6 +416,7 @@ function SectionDonate(props: TReceiverProps & {onDonateCallback: TOnDonateCallb
 				<div>
 					<button
 						onClick={(): void => set_isOpen(true)}
+						suppressHydrationWarning
 						className={'flex cursor-pointer items-center justify-center rounded border border-neutral-200 px-2 py-1 text-xxs text-neutral-400 transition-colors hover:bg-neutral-900 hover:text-neutral-0'}>
 						{`eth: ${truncateHex(currentNetworkAddress, 6)}`}
 					</button>

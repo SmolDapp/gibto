@@ -13,20 +13,19 @@ import {useChainID} from '@yearn-finance/web-lib/hooks/useChainID';
 import {toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {decodeAsNumber, decodeAsString} from '@yearn-finance/web-lib/utils/decoder';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
-import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 
-import type {TTokenInfo} from 'contexts/useTokenList';
 import type {Dispatch, ReactElement, SetStateAction} from 'react';
+import type {TToken} from 'utils/types/types';
 import type {TAddress, TDict} from '@yearn-finance/web-lib/types';
 
 type TComboboxAddressInput = {
-	possibleDestinations: TDict<TTokenInfo>;
+	possibleDestinations: TDict<TToken>;
 	value: string;
-	onChangeValue: Dispatch<SetStateAction<TTokenInfo>>,
-	onAddPossibleDestination: Dispatch<SetStateAction<TDict<TTokenInfo>>>
+	onChangeValue: Dispatch<SetStateAction<TToken>>,
+	onAddPossibleDestination: Dispatch<SetStateAction<TDict<TToken>>>
 }
 
-function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
+function ComboboxOption({option}: {option: TToken}): ReactElement {
 	const	{balances} = useWallet();
 
 	return (
@@ -39,7 +38,7 @@ function ComboboxOption({option}: {option: TTokenInfo}): ReactElement {
 						<ImageWithFallback
 							alt={''}
 							unoptimized
-							src={option?.logoURI}
+							src={option?.logoURI || `${process.env.SMOL_ASSETS_URL}/token/${option.chainID}/${option.address}/logo-32.png`}
 							width={24}
 							height={24} />
 					</div>
@@ -122,7 +121,7 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 			<Combobox<any>
 				value={value}
 				onChange={(_selected: TAddress): void => {
-					onAddPossibleDestination((prev: TDict<TTokenInfo>): TDict<TTokenInfo> => {
+					onAddPossibleDestination((prev: TDict<TToken>): TDict<TToken> => {
 						if (prev[_selected]) {
 							return (prev);
 						}
@@ -133,22 +132,20 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 								name: tokenData?.name || '',
 								symbol: tokenData?.symbol || '',
 								decimals: tokenData?.decimals || 18,
-								chainId: safeChainID,
+								chainID: safeChainID,
 								logoURI: ''
 							}
 						});
 					});
-					performBatchedUpdates((): void => {
 						onChangeValue({
 							address: toAddress(_selected),
 							name: possibleDestinations[toAddress(_selected)]?.name || '',
 							symbol: possibleDestinations[toAddress(_selected)]?.symbol || '',
 							decimals: possibleDestinations[toAddress(_selected)]?.decimals || 18,
-							chainId: possibleDestinations[toAddress(_selected)].chainId || safeChainID,
+							chainID: possibleDestinations[toAddress(_selected)].chainID || safeChainID,
 							logoURI: possibleDestinations[toAddress(_selected)]?.logoURI || ''
 						});
 						set_isOpen(false);
-					});
 				}}>
 				<div className={'relative'}>
 					<Combobox.Button
@@ -160,7 +157,7 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 									<ImageWithFallback
 										alt={''}
 										unoptimized
-										src={possibleDestinations?.[toAddress(value)]?.logoURI}
+										src={`${process.env.SMOL_ASSETS_URL}/token/${safeChainID}/${value}/logo-32.png`}
 										width={24}
 										height={24} />
 								) : <div className={'h-6 w-6 rounded-full bg-neutral-0'} />}
@@ -174,10 +171,8 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 									autoCorrect={'off'}
 									spellCheck={false}
 									onChange={(event): void => {
-										performBatchedUpdates((): void => {
 											set_isOpen(true);
 											set_query(event.target.value);
-										});
 									}} />
 							</p>
 						</div>
@@ -204,7 +199,7 @@ function ComboboxAddressInput({possibleDestinations, value, onChangeValue, onAdd
 								<ComboboxOption
 									option={{
 										address: toAddress(query),
-										chainId: safeChainID,
+										chainID: safeChainID,
 										name: tokenData.name,
 										symbol: tokenData.symbol,
 										decimals: tokenData.decimals,

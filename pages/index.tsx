@@ -13,13 +13,12 @@ import {useUpdateEffect} from '@react-hookz/web';
 import {fetchEnsResolver} from '@wagmi/core';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useUI} from '@yearn-finance/web-lib/contexts/useUI';
-import IconLoader from '@yearn-finance/web-lib/icons/IconLoader';
+import {IconLoader} from '@yearn-finance/web-lib/icons/IconLoader';
 import {isZeroAddress, toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
-import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 
 import type {ReactElement} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function	SearchFor(): ReactElement {
 	const router = useRouter();
@@ -42,10 +41,8 @@ function	SearchFor(): ReactElement {
 				const resolvedAddress = await fetchEnsResolver({name: value});
 				if (resolvedAddress) {
 					if (isAddress(resolvedAddress)) {
-						performBatchedUpdates((): void => {
 							set_namedValue(toAddress(resolvedAddress));
 							set_isValidValue(true);
-						});
 						return;
 					}
 				}
@@ -54,10 +51,8 @@ function	SearchFor(): ReactElement {
 				const	resolvedAddress = await lensProtocol.getAddressFromHandle(value);
 				if (resolvedAddress) {
 					if (isAddress(resolvedAddress)) {
-						performBatchedUpdates((): void => {
 							set_namedValue(toAddress(resolvedAddress));
 							set_isValidValue(true);
-						});
 						return;
 					}
 				}
@@ -78,20 +73,16 @@ function	SearchFor(): ReactElement {
 		if (value.endsWith('.eth')) {
 			set_isLoadingValidish(true);
 			checkENSValidity(value).then(([validishDest, isValid]): void => {
-				performBatchedUpdates((): void => {
 					set_isLoadingValidish(false);
 					set_isValidish(isValid);
 					set_namedValue(validishDest);
-				});
 			});
 		} else if (value.endsWith('.lens')) {
 			set_isLoadingValidish(true);
 			checkLensValidity(value).then(([validishDest, isValid]): void => {
-				performBatchedUpdates((): void => {
 					set_isLoadingValidish(false);
 					set_isValidish(isValid);
 					set_namedValue(validishDest);
-				});
 			});
 		} else if (!isZeroAddress(toAddress(value))) {
 			set_isValidValue(true);

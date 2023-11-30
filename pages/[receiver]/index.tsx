@@ -10,7 +10,7 @@ import {baseFetcher} from '@yearn-finance/web-lib/utils/fetchers';
 
 import type {GetServerSideProps, GetServerSidePropsResult} from 'next';
 import type {ReactElement} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function	Receiver(props: TReceiverProps): ReactElement {
 	const {address} = useWeb3();

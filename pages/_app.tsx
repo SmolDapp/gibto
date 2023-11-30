@@ -3,7 +3,7 @@ import {Inter} from 'next/font/google';
 import AppWrapper from 'components/common/AppWrapper';
 import {TokenListContextApp} from 'contexts/useTokenList';
 import {WalletContextApp} from 'contexts/useWallet';
-import config from 'utils/wagmiConfig';
+import {arbitrum, base, bsc, gnosis, localhost, mainnet, optimism, polygon, polygonZkEvm, zkSync} from 'viem/chains';
 import {WithYearn} from '@yearn-finance/web-lib/contexts/WithYearn';
 
 import type {AppProps} from 'next/app';
@@ -18,11 +18,23 @@ const inter = Inter({
 	variable: '--inter-font'
 });
 
+export const SUPPORTED_CHAINS = [
+	mainnet,
+	optimism,
+	bsc,
+	gnosis,
+	polygon,
+	polygonZkEvm,
+	zkSync,
+	base,
+	arbitrum
+];
+
 function	MyApp(props: AppProps): ReactElement {
 	return (
 		<>
 			<style jsx global>{`html {font-family: ${inter.style.fontFamily};}`}</style>
-			<WithYearn config={config}>
+			<WithYearn supportedChains={[...SUPPORTED_CHAINS, localhost]}>
 				<TokenListContextApp>
 					<WalletContextApp>
 						<main className={`flex h-screen flex-col ${inter.variable}`}>

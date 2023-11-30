@@ -1,12 +1,12 @@
 import React, {Fragment} from 'react';
-import IconLinkOut from '@yearn-finance/web-lib/icons/IconLinkOut';
+import {IconLinkOut} from '@yearn-finance/web-lib/icons/IconLinkOut';
 import {toAddress, truncateHex} from '@yearn-finance/web-lib/utils/address';
 
 import Avatar from './Avatar';
 import SectionSocials from './SectionSocials';
 
 import type {ReactElement} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function urlEncoded(str: string): string {
 	return encodeURIComponent(str).replace(/[!'()*]/g, (c): string => `%${c.charCodeAt(0).toString(16)}`);

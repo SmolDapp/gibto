@@ -5,10 +5,10 @@ import {Button} from '@yearn-finance/web-lib/components/Button';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 
 import type {ReactElement} from 'react';
-import type {Maybe, TGoal, TReceiverProps} from 'utils/types';
+import type {TGoal, TReceiverProps} from 'utils/types/types';
 
 function SectionGoal(props: TReceiverProps & {
-	goal: Maybe<TGoal>,
+	goal: TGoal,
 	isLoadingGoal: boolean,
 	mutateGoal: VoidFunction
 }): ReactElement {

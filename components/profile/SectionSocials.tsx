@@ -3,12 +3,12 @@ import SocialMediaCard from 'components/common/SocialMediaCard';
 import IconSocialReddit from 'components/icons/IconSocialReddit';
 import IconSocialTelegram from 'components/icons/IconSocialTelegram';
 import IconSocialWebsite from 'components/icons/IconSocialWebsite';
-import IconSocialDiscord from '@yearn-finance/web-lib/icons/IconSocialDiscord';
-import IconSocialGithub from '@yearn-finance/web-lib/icons/IconSocialGithub';
-import IconSocialTwitter from '@yearn-finance/web-lib/icons/IconSocialTwitter';
+import {IconSocialDiscord} from '@yearn-finance/web-lib/icons/IconSocialDiscord';
+import {IconSocialGithub} from '@yearn-finance/web-lib/icons/IconSocialGithub';
+import {IconSocialTwitter} from '@yearn-finance/web-lib/icons/IconSocialTwitter';
 
 import type {ReactElement} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function SectionSocials(props: TReceiverProps): ReactElement {
 	return (

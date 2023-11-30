@@ -13,11 +13,11 @@ import SectionProfile from './SectionProfile';
 import SectionSocials from './SectionSocials';
 
 import type {ReactElement} from 'react';
-import type {Maybe, TGoal, TReceiverProps} from 'utils/types';
+import type {TGoal, TReceiverProps} from 'utils/types/types';
 
 
 function SectionHero(props: TReceiverProps & {
-	goal: Maybe<TGoal>,
+	goal: TGoal,
 	isLoadingGoal: boolean,
 	mutateGoal: VoidFunction
 }): ReactElement {

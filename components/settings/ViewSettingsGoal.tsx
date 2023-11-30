@@ -5,12 +5,11 @@ import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
-import performBatchedUpdates from '@yearn-finance/web-lib/utils/performBatchedUpdates';
 
 import type {FormEvent, ReactElement} from 'react';
-import type {Maybe, TGoal} from 'utils/types';
+import type {TGoal} from 'utils/types/types';
 
-function ViewSettingsGoal(props: Maybe<TGoal> & {mutate: VoidFunction}): ReactElement {
+function ViewSettingsGoal(props: TGoal & {mutate: VoidFunction}): ReactElement {
 	const {toast} = yToast();
 	const {address, provider} = useWeb3();
 	const [startDate, set_startDate] = useState(
@@ -23,11 +22,9 @@ function ViewSettingsGoal(props: Maybe<TGoal> & {mutate: VoidFunction}): ReactEl
 	const [isSaving, set_isSaving] = useState(false);
 
 	useEffect((): void => {
-		performBatchedUpdates((): void => {
 			set_startDate((props.startDate ? new Date(props.startDate * 1000) : new Date(Date.now())).toISOString().split('T')[0]);
 			set_endDate((props.endDate ? new Date(props.endDate * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]);
 			set_goalValue(props.value || 0);
-		});
 	}, [props]);
 
 	const onSubmitForm = useCallback(async (e: FormEvent<HTMLFormElement>): Promise<void> => {

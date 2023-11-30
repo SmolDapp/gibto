@@ -1,5 +1,5 @@
 import React, {Fragment, useCallback, useState} from 'react';
-import {PossibleNetworks} from 'utils/types';
+import {PossibleNetworks} from 'utils/types/types';
 import axios from 'axios';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {yToast} from '@yearn-finance/web-lib/components/yToast';
@@ -7,7 +7,7 @@ import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 
 import type {FormEvent, ReactElement} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function ViewSettingsAddresses(props: TReceiverProps): ReactElement {
 	const {toast} = yToast();

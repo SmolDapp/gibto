@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type {ReactElement} from 'react';
-import type {TReceiverProps} from 'utils/types';
+import type {TReceiverProps} from 'utils/types/types';
 
 function	SectionAbout(props: TReceiverProps): ReactElement {
 	const	placeHolder = 'hmm, looks like there’s nothing here yet. how intriguing!';

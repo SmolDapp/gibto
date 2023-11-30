@@ -7,13 +7,13 @@ import IconSpinner from 'components/icons/IconSpinner';
 import {useConnect} from 'wagmi';
 import {Button} from '@yearn-finance/web-lib/components/Button';
 import {useWeb3} from '@yearn-finance/web-lib/contexts/useWeb3';
-import IconLinkOut from '@yearn-finance/web-lib/icons/IconLinkOut';
+import {IconLinkOut} from '@yearn-finance/web-lib/icons/IconLinkOut';
 import {toAddress} from '@yearn-finance/web-lib/utils/address';
 import {formatAmount} from '@yearn-finance/web-lib/utils/format.number';
 import {formatDuration} from '@yearn-finance/web-lib/utils/format.time';
 
 import type {ReactElement} from 'react';
-import type {TDonationsProps} from 'utils/types';
+import type {TDonationsProps} from 'utils/types/types';
 
 function	SectionDonationHistory({donateHistory, isLoading, name}: {
 	name: string,
